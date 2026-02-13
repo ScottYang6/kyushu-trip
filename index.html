@@ -6,11 +6,15 @@
     <title>小N 九州 Jarvis 旅遊助手</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src='https://unpkg.com/tesseract.js@4/dist/tesseract.min.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f1f5f9; }
-        .iphone-x { width: 375px; height: 812px; background: white; border: 12px solid #333; border-radius: 40px; position: relative; margin: 20px auto; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
-        .iphone-x .tab-bar { position: absolute; bottom: 0; left: 0; right: 0; z-index: 50; }
+        .iphone-x { width: 100%; height: 100vh; background: white; overflow: hidden; }
+        .iphone-x .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; }
         .scroll-hide::-webkit-scrollbar { display: none; }
         .tab-active { color: #3b82f6 !important; }
         .page { display: none; }
@@ -43,16 +47,49 @@
         .edit-mode .delete-btn { display: flex !important; }
         .edit-mode .nav-map-btn { display: none !important; }
         .edit-mode .add-spot-btn { display: block !important; }
+        .delete-btn { display: none; }
         
-        .modal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
-        .modal-active { display: flex; }
+        /* 新增景點 Modal */
+        .spot-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .spot-modal.active { display: flex; }
+        /* 長按拖動提示 */
+        .spot-card::after {
+            content: '長按拖動';
+            position: absolute;
+            right: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            color: #94a3b8;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .edit-mode .spot-card::after {
+            opacity: 1;
+        }
+        .spot-card {
+            position: relative;
+            cursor: grab;
+        }
+        .spot-card:active {
+            cursor: grabbing;
+        }
+        .sortable-ghost {
+            opacity: 0.4;
+            background: #e0f2fe;
+        }
+        .sortable-drag {
+            background: white;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            transform: scale(1.02);
+        }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen">
+<body class="bg-slate-100">
 
     <div class="iphone-x flex flex-col">
         <!-- Status Bar -->
-        <div class="h-10 flex justify-between items-center px-8 text-xs font-bold bg-white z-20">
+        <div class="h-12 flex justify-between items-center px-6 text-xs font-bold bg-white z-20 pt-2">
             <span>9:41</span>
             <div class="flex gap-1">
                 <i class="fas fa-signal"></i>
@@ -146,21 +183,38 @@
             <div id="itinerary" class="page px-6 pt-4 pb-24">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold text-slate-800">詳細行程</h2>
+                    <button id="editModeBtn" onclick="toggleEditMode()" class="bg-blue-100 text-blue-600 px-4 py-2 rounded-full text-sm font-bold">編輯</button>
                 </div>
+                
+                <!-- 新增景點按鈕（編輯模式顯示）-->
+                <div id="addSpotSection" class="hidden mb-4">
+                    <button onclick="openAddSpotModal()" class="w-full bg-green-500 text-white font-bold py-3 rounded-2xl flex items-center justify-center gap-2 mb-3">
+                        <i class="fas fa-plus-circle"></i> 新增景點
+                    </button>
+                </div>
+                
                 <div id="itineraryList" class="space-y-6">
                     
                     <!-- Day 1 -->
                     <div class="mb-6">
                         <p class="font-bold text-blue-600 mb-3">Day 1 - 7/27 (一) 福岡市區</p>
                         
-                        <div class="spot-card bg-white border border-slate-100 rounded-2xl shadow-sm mb-3 overflow-hidden">
-                            <div class="p-4 cursor-pointer" onclick="toggleSpot(this)">
+                        <div class="spot-card bg-white border border-slate-100 rounded-2xl shadow-sm mb-3 overflow-hidden" data-spot-id="day1-1">
+                            <div class="p-4">
                                 <div class="flex justify-between items-start">
-                                    <div class="flex-1">
+                                    <div class="flex-1 cursor-pointer" onclick="toggleSpot(this.closest('.spot-card').querySelector('.spot-header'))">
                                         <p class="font-bold text-slate-800 text-lg">福岡國際機場</p>
                                         <div class="mapcode-display">13 294 821*15</div>
                                     </div>
-                                    <i class="fas fa-chevron-down text-slate-400 transition-transform mt-1"></i>
+                                    <div class="flex items-center gap-2">
+                                        <button onclick="event.stopPropagation(); window.open('https://www.google.com/maps/search/' + encodeURIComponent('福岡機場 福岡市博多區'), '_blank')" class="nav-map-btn w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center">
+                                            <i class="fas fa-map-location-dot"></i>
+                                        </button>
+                                        <button onclick="event.stopPropagation(); deleteSpot(this.closest('.spot-card'))" class="delete-btn hidden text-red-500 w-8 h-8 rounded-full bg-red-50 flex items-center justify-center">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        <i class="fas fa-chevron-down text-slate-400 transition-transform cursor-pointer" onclick="toggleSpot(this.closest('.spot-card').querySelector('.spot-header'))"></i>
+                                    </div>
                                 </div>
                             </div>
                             <div class="spot-detail hidden px-4 pb-4 border-t border-slate-100 pt-3">
@@ -174,13 +228,21 @@
                         </div>
 
                         <div class="spot-card bg-white border border-slate-100 rounded-2xl shadow-sm mb-3 overflow-hidden">
-                            <div class="p-4 cursor-pointer" onclick="toggleSpot(this)">
+                            <div class="p-4">
                                 <div class="flex justify-between items-start">
-                                    <div class="flex-1">
+                                    <div class="flex-1 cursor-pointer" onclick="toggleSpot(this.closest('.spot-card'))">
                                         <p class="font-bold text-slate-800 text-lg">中洲川端站 行李寄存</p>
                                         <div class="mapcode-display">13 323 126*44</div>
                                     </div>
-                                    <i class="fas fa-chevron-down text-slate-400 transition-transform mt-1"></i>
+                                    <div class="flex items-center gap-2">
+                                        <button onclick="event.stopPropagation(); window.open('https://www.google.com/maps/search/' + encodeURIComponent('中洲川端站 福岡市博多區中洲'), '_blank')" class="nav-map-btn w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center">
+                                            <i class="fas fa-map-location-dot"></i>
+                                        </button>
+                                        <button onclick="event.stopPropagation(); deleteSpot(this.closest('.spot-card'))" class="delete-btn hidden text-red-500 w-8 h-8 rounded-full bg-red-50 flex items-center justify-center">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        <i class="fas fa-chevron-down text-slate-400 transition-transform cursor-pointer" onclick="toggleSpot(this.closest('.spot-card'))"></i>
+                                    </div>
                                 </div>
                             </div>
                             <div class="spot-detail hidden px-4 pb-4 border-t border-slate-100 pt-3">
@@ -194,13 +256,21 @@
                         </div>
 
                         <div class="spot-card bg-white border border-slate-100 rounded-2xl shadow-sm mb-3 overflow-hidden">
-                            <div class="p-4 cursor-pointer" onclick="toggleSpot(this)">
+                            <div class="p-4">
                                 <div class="flex justify-between items-start">
-                                    <div class="flex-1">
+                                    <div class="flex-1 cursor-pointer" onclick="toggleSpot(this.closest('.spot-card'))">
                                         <p class="font-bold text-slate-800 text-lg">一蘭拉麵 總本店</p>
                                         <div class="mapcode-display">13 318 631*71</div>
                                     </div>
-                                    <i class="fas fa-chevron-down text-slate-400 transition-transform mt-1"></i>
+                                    <div class="flex items-center gap-2">
+                                        <button onclick="event.stopPropagation(); window.open('https://www.google.com/maps/search/' + encodeURIComponent('一蘭拉麵 總本店 福岡市博多區中洲5-3-2'), '_blank')" class="nav-map-btn w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center">
+                                            <i class="fas fa-map-location-dot"></i>
+                                        </button>
+                                        <button onclick="event.stopPropagation(); deleteSpot(this.closest('.spot-card'))" class="delete-btn hidden text-red-500 w-8 h-8 rounded-full bg-red-50 flex items-center justify-center">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        <i class="fas fa-chevron-down text-slate-400 transition-transform cursor-pointer" onclick="toggleSpot(this.closest('.spot-card'))"></i>
+                                    </div>
                                 </div>
                             </div>
                             <div class="spot-detail hidden px-4 pb-4 border-t border-slate-100 pt-3">
@@ -568,18 +638,166 @@
 
             <!-- Page 3: Accounting -->
             <div id="accounting" class="page px-6 pt-4 pb-24">
-                <h2 class="text-2xl font-bold mb-6 text-slate-800">記帳本</h2>
-                <div class="bg-slate-800 text-white rounded-3xl p-6 mb-6 shadow-xl">
-                    <p class="opacity-60 text-sm">今日累積花費</p>
-                    <p class="text-3xl font-bold mt-1">¥ 12,500</p>
-                    <div class="mt-4 pt-4 border-t border-slate-700 flex justify-between text-sm">
-                        <span>約合台幣</span>
-                        <span class="font-bold text-blue-300">TWD 2,750</span>
+                <h2 class="text-2xl font-bold mb-4 text-slate-800">記帳本</h2>
+                
+                <!-- 總計卡片 -->
+                <div class="bg-gradient-to-br from-slate-800 to-slate-900 text-white rounded-3xl p-6 mb-4 shadow-xl">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="opacity-60 text-sm">總花費</p>
+                            <p class="text-3xl font-bold mt-1" id="totalAmount">¥ 0</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="opacity-60 text-xs">約合台幣</p>
+                            <p class="text-xl font-bold text-blue-300" id="totalTWD">TWD 0</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-slate-700 grid grid-cols-3 gap-2 text-center text-xs">
+                        <div>
+                            <p class="opacity-60">筆數</p>
+                            <p class="font-bold text-lg" id="expenseCount">0</p>
+                        </div>
+                        <div>
+                            <p class="opacity-60">平均</p>
+                            <p class="font-bold text-lg" id="avgAmount">¥0</p>
+                        </div>
+                        <div>
+                            <p class="opacity-60">今日</p>
+                            <p class="font-bold text-lg text-green-400" id="todayAmount">¥0</p>
+                        </div>
                     </div>
                 </div>
-                <button class="w-full bg-blue-500 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-3 shadow-lg active:scale-95 transition-transform">
+
+                <!-- 掃描按鈕 -->
+                <button onclick="scanReceipt()" class="w-full bg-blue-500 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-3 shadow-lg active:scale-95 transition-transform mb-4">
                     <i class="fas fa-camera"></i> 掃描收據
                 </button>
+                <input type="file" id="receiptInput" accept="image/*" class="hidden" onchange="processReceipt(this)">
+
+                <!-- 載入中提示 -->
+                <div id="scanningStatus" class="hidden bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-4">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-spinner fa-spin text-blue-500"></i>
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-slate-700">正在辨識收據...</p>
+                            <div class="w-full bg-slate-200 rounded-full h-1.5 mt-2">
+                                <div id="scanProgress" class="bg-blue-500 h-1.5 rounded-full transition-all" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 分類統計圖表 -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm mb-4">
+                    <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                        <i class="fas fa-chart-pie text-blue-500"></i> 支出分類
+                    </h3>
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <div class="bg-orange-50 rounded-xl p-3">
+                            <div class="flex items-center gap-2 mb-1">
+                                <i class="fas fa-utensils text-orange-500"></i>
+                                <span class="text-xs text-slate-600">餐飲</span>
+                            </div>
+                            <p class="font-bold text-slate-800" id="cat-food">¥0</p>
+                        </div>
+                        <div class="bg-blue-50 rounded-xl p-3">
+                            <div class="flex items-center gap-2 mb-1">
+                                <i class="fas fa-train text-blue-500"></i>
+                                <span class="text-xs text-slate-600">交通</span>
+                            </div>
+                            <p class="font-bold text-slate-800" id="cat-transport">¥0</p>
+                        </div>
+                        <div class="bg-pink-50 rounded-xl p-3">
+                            <div class="flex items-center gap-2 mb-1">
+                                <i class="fas fa-shopping-bag text-pink-500"></i>
+                                <span class="text-xs text-slate-600">購物</span>
+                            </div>
+                            <p class="font-bold text-slate-800" id="cat-shopping">¥0</p>
+                        </div>
+                        <div class="bg-purple-50 rounded-xl p-3">
+                            <div class="flex items-center gap-2 mb-1">
+                                <i class="fas fa-bed text-purple-500"></i>
+                                <span class="text-xs text-slate-600">住宿</span>
+                            </div>
+                            <p class="font-bold text-slate-800" id="cat-hotel">¥0</p>
+                        </div>
+                        <div class="bg-green-50 rounded-xl p-3">
+                            <div class="flex items-center gap-2 mb-1">
+                                <i class="fas fa-ticket-alt text-green-500"></i>
+                                <span class="text-xs text-slate-600">景點</span>
+                            </div>
+                            <p class="font-bold text-slate-800" id="cat-ticket">¥0</p>
+                        </div>
+                        <div class="bg-gray-50 rounded-xl p-3">
+                            <div class="flex items-center gap-2 mb-1">
+                                <i class="fas fa-ellipsis-h text-gray-500"></i>
+                                <span class="text-xs text-slate-600">其他</span>
+                            </div>
+                            <p class="font-bold text-slate-800" id="cat-other">¥0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 手動新增支出 -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm mb-4">
+                    <h3 class="font-bold text-slate-800 mb-3">手動新增</h3>
+                    <div class="space-y-3">
+                        <input id="manualStore" type="text" placeholder="商家名稱" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm">
+                        <div class="flex gap-2">
+                            <input id="manualAmount" type="number" placeholder="金額 ¥" class="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm">
+                            <select id="manualCategory" class="border border-slate-200 rounded-xl px-3 py-2 text-sm bg-white">
+                                <option value="food">🍜 餐飲</option>
+                                <option value="transport">🚃 交通</option>
+                                <option value="shopping">🛍️ 購物</option>
+                                <option value="hotel">🏨 住宿</option>
+                                <option value="ticket">🎫 景點</option>
+                                <option value="other">📦 其他</option>
+                            </select>
+                        </div>
+                        <button onclick="addManualExpense()" class="w-full bg-green-500 text-white font-bold py-2 rounded-xl text-sm">新增支出</button>
+                    </div>
+                </div>
+
+                <!-- 支出列表 -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm mb-4">
+                    <h3 class="font-bold text-slate-800 mb-3 flex items-center justify-between">
+                        <span>支出明細</span>
+                        <span class="text-xs text-slate-500" id="expenseCountBadge">0 筆</span>
+                    </h3>
+                    <div id="expenseList" class="space-y-2 max-h-60 overflow-y-auto">
+                        <div class="text-center text-slate-400 py-8">
+                            <i class="fas fa-receipt text-3xl mb-2"></i>
+                            <p class="text-sm">尚無支出記錄</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 匯出功能 -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm">
+                    <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                        <i class="fas fa-download text-blue-500"></i> 匯出資料
+                    </h3>
+                    <div class="space-y-2">
+                        <button onclick="exportToExcel()" class="w-full bg-blue-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2">
+                            <i class="fas fa-file-excel"></i> 下載 Excel 檔案
+                        </button>
+                        <button onclick="exportToEmail()" class="w-full bg-slate-100 text-slate-700 font-bold py-3 rounded-xl flex items-center justify-center gap-2">
+                            <i class="fas fa-envelope"></i> 寄送到 Email
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 匯出預覽 Modal -->
+                <div id="exportModal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
+                    <div class="bg-white rounded-2xl p-6 w-full max-w-sm">
+                        <h3 class="font-bold text-lg mb-4">匯出預覽</h3>
+                        <div id="exportPreview" class="bg-slate-50 rounded-xl p-3 text-xs font-mono mb-4 max-h-40 overflow-y-auto"></div>
+                        <div class="flex gap-2">
+                            <button onclick="closeExportModal()" class="flex-1 bg-slate-100 py-2 rounded-xl font-bold">取消</button>
+                            <button onclick="confirmExport()" class="flex-1 bg-blue-500 text-white py-2 rounded-xl font-bold">確認匯出</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Page 4: Notes -->
@@ -781,7 +999,7 @@
         </div>
 
         <!-- Home Indicator -->
-        <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-slate-200 rounded-full z-50"></div>
+        <div class="h-1 bg-slate-200 rounded-full mx-auto w-32 mb-1"></div>
     </div>
 
     <script>
@@ -871,6 +1089,675 @@
         
         // 頁面載入時渲染備註
         renderNotes();
+
+        // ========== 記帳本功能 ==========
+        let expenses = JSON.parse(localStorage.getItem('kyushu_expenses') || '[]');
+        
+        const categoryNames = {
+            food: '餐飲',
+            transport: '交通',
+            shopping: '購物',
+            hotel: '住宿',
+            ticket: '景點',
+            other: '其他'
+        };
+        
+        const categoryIcons = {
+            food: '🍜',
+            transport: '🚃',
+            shopping: '🛍️',
+            hotel: '🏨',
+            ticket: '🎫',
+            other: '📦'
+        };
+        
+        // 自動分類關鍵字
+        const categoryKeywords = {
+            food: ['拉麵', '壽司', '餐廳', '食堂', '燒肉', '定食', '蕎麥', '烏龍', '咖啡', '麵包', '甜點', '超市', '便利店', '7-11', '全家', 'lawson'],
+            transport: ['JR', '地鐵', '地鐵', '新幹線', '巴士', '計程車', 'taxi', '租車', '停車', '油錢'],
+            shopping: ['藥妝', '百貨', 'outlet', '超市', '便利商店', '紀念品', '伴手禮', 'uniqlo', '無印', '大國', '松本清'],
+            hotel: ['hotel', '旅館', '民宿', '住宿', '溫泉'],
+            ticket: ['門票', '入場券', '券', '水族館', '動物園', '博覽會', '景點']
+        };
+        
+        // 掃描收據
+        function scanReceipt() {
+            document.getElementById('receiptInput').click();
+        }
+        
+        async function processReceipt(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const status = document.getElementById('scanningStatus');
+            const progress = document.getElementById('scanProgress');
+            status.classList.remove('hidden');
+            
+            try {
+                const result = await Tesseract.recognize(
+                    file,
+                    'chi_sim+eng+jpn',
+                    {
+                        logger: m => {
+                            if (m.status === 'recognizing text') {
+                                progress.style.width = (m.progress * 100) + '%';
+                            }
+                        }
+                    }
+                );
+                
+                const text = result.data.text;
+                const amount = extractAmount(text);
+                const store = extractStore(text);
+                const category = autoCategory(store + ' ' + text);
+                
+                addExpense({
+                    store: store || '未知商家',
+                    amount: amount || 0,
+                    category: category,
+                    date: new Date().toISOString(),
+                    ocr: text.substring(0, 100)
+                });
+                
+                status.classList.add('hidden');
+                progress.style.width = '0%';
+                
+            } catch (error) {
+                alert('辨識失敗，請嘗試手動新增');
+                status.classList.add('hidden');
+            }
+        }
+        
+        // 提取金額
+        function extractAmount(text) {
+            // 找 ¥ 或 円 後的數字
+            const patterns = [
+                /[¥￥]\s*(\d{1,3}(?:,\d{3})+|\d+)/,
+                /(\d{1,3}(?:,\d{3})+|\d+)\s*[円]/,
+                /合計.*?[¥￥]\s*(\d{1,3}(?:,\d{3})+|\d+)/,
+                /總計.*?[¥￥]\s*(\d{1,3}(?:,\d{3})+|\d+)/,
+                /(\d{1,3}(?:,\d{3})+|\d+)\s*円/
+            ];
+            
+            for (let pattern of patterns) {
+                const match = text.match(pattern);
+                if (match) {
+                    return parseInt(match[1].replace(/,/g, ''));
+                }
+            }
+            return 0;
+        }
+        
+        // 提取商家名稱
+        function extractStore(text) {
+            const lines = text.split('\n').filter(l => l.trim());
+            // 通常第一行是店名
+            if (lines.length > 0) {
+                const store = lines[0].trim();
+                if (store.length < 20) return store;
+            }
+            return '未知商家';
+        }
+        
+        // 自動分類
+        function autoCategory(text) {
+            text = text.toLowerCase();
+            for (let [cat, keywords] of Object.entries(categoryKeywords)) {
+                for (let keyword of keywords) {
+                    if (text.includes(keyword)) return cat;
+                }
+            }
+            return 'other';
+        }
+        
+        // 手動新增支出
+        function addManualExpense() {
+            const store = document.getElementById('manualStore').value.trim();
+            const amount = parseInt(document.getElementById('manualAmount').value);
+            const category = document.getElementById('manualCategory').value;
+            
+            if (!store || !amount) {
+                alert('請填寫商家名稱和金額');
+                return;
+            }
+            
+            addExpense({
+                store: store,
+                amount: amount,
+                category: category,
+                date: new Date().toISOString()
+            });
+            
+            // 清空表單
+            document.getElementById('manualStore').value = '';
+            document.getElementById('manualAmount').value = '';
+        }
+        
+        // 新增支出
+        function addExpense(expense) {
+            expenses.unshift(expense);
+            localStorage.setItem('kyushu_expenses', JSON.stringify(expenses));
+            updateAccounting();
+        }
+        
+        // 刪除支出
+        function deleteExpense(index) {
+            expenses.splice(index, 1);
+            localStorage.setItem('kyushu_expenses', JSON.stringify(expenses));
+            updateAccounting();
+        }
+        
+        // 更新記帳顯示
+        function updateAccounting() {
+            // 計算總計
+            const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+            const today = new Date().toDateString();
+            const todayTotal = expenses
+                .filter(e => new Date(e.date).toDateString() === today)
+                .reduce((sum, e) => sum + e.amount, 0);
+            
+            document.getElementById('totalAmount').textContent = `¥ ${total.toLocaleString()}`;
+            document.getElementById('totalTWD').textContent = `TWD ${Math.round(total * 0.22).toLocaleString()}`;
+            document.getElementById('expenseCount').textContent = expenses.length;
+            document.getElementById('avgAmount').textContent = expenses.length ? `¥${Math.round(total / expenses.length)}` : '¥0';
+            document.getElementById('todayAmount').textContent = `¥${todayTotal.toLocaleString()}`;
+            document.getElementById('expenseCountBadge').textContent = `${expenses.length} 筆`;
+            
+            // 更新分類統計
+            const categoryTotals = {};
+            for (let exp of expenses) {
+                categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + exp.amount;
+            }
+            
+            for (let cat of Object.keys(categoryNames)) {
+                const el = document.getElementById(`cat-${cat}`);
+                if (el) {
+                    el.textContent = `¥${(categoryTotals[cat] || 0).toLocaleString()}`;
+                }
+            }
+            
+            // 更新支出列表
+            const list = document.getElementById('expenseList');
+            if (expenses.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center text-slate-400 py-8">
+                        <i class="fas fa-receipt text-3xl mb-2"></i>
+                        <p class="text-sm">尚無支出記錄</p>
+                    </div>
+                `;
+            } else {
+                list.innerHTML = expenses.map((exp, idx) => `
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-lg">
+                                ${categoryIcons[exp.category]}
+                            </div>
+                            <div>
+                                <p class="font-bold text-slate-800 text-sm">${exp.store}</p>
+                                <p class="text-xs text-slate-500">${categoryNames[exp.category]} · ${new Date(exp.date).toLocaleDateString('zh-TW')}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold text-slate-800">¥${exp.amount.toLocaleString()}</p>
+                            <button onclick="deleteExpense(${idx})" class="text-xs text-red-500 mt-1">刪除</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        // 匯出 Excel
+        function exportToExcel() {
+            if (expenses.length === 0) {
+                alert('尚無資料可匯出');
+                return;
+            }
+            
+            const data = expenses.map(e => ({
+                '日期': new Date(e.date).toLocaleDateString('zh-TW'),
+                '商家': e.store,
+                '類別': categoryNames[e.category],
+                '金額(日圓)': e.amount,
+                '金額(台幣)': Math.round(e.amount * 0.22)
+            }));
+            
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, '支出明細');
+            
+            // 添加總計
+            const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+            XLSX.utils.sheet_add_json(ws, [{
+                '日期': '總計',
+                '商家': '',
+                '類別': '',
+                '金額(日圓)': total,
+                '金額(台幣)': Math.round(total * 0.22)
+            }], {origin: -1});
+            
+            XLSX.writeFile(wb, `九州旅遊記帳_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+        
+        // 匯出到 Email
+        function exportToEmail() {
+            if (expenses.length === 0) {
+                alert('尚無資料可匯出');
+                return;
+            }
+            
+            let body = '九州旅遊支出明細\n\n';
+            body += '='.repeat(40) + '\n';
+            
+            let categoryTotals = {};
+            
+            expenses.forEach(e => {
+                body += `${new Date(e.date).toLocaleDateString('zh-TW')}\t${e.store}\t${categoryNames[e.category]}\t¥${e.amount.toLocaleString()}\n`;
+                categoryTotals[e.category] = (categoryTotals[e.category] || 0) + e.amount;
+            });
+            
+            body += '='.repeat(40) + '\n\n';
+            body += '【分類統計】\n';
+            
+            for (let [cat, total] of Object.entries(categoryTotals)) {
+                body += `${categoryNames[cat]}: ¥${total.toLocaleString()}\n`;
+            }
+            
+            const grandTotal = expenses.reduce((sum, e) => sum + e.amount, 0);
+            body += `\n總計: ¥${grandTotal.toLocaleString()} (約 TWD ${Math.round(grandTotal * 0.22).toLocaleString()})\n`;
+            
+            const subject = encodeURIComponent('九州旅遊記帳明細');
+            const bodyEncoded = encodeURIComponent(body);
+            
+            window.location.href = `mailto:?subject=${subject}&body=${bodyEncoded}`;
+        }
+        
+        // 初始化記帳資料
+        updateAccounting();
+    </script>
+
+    <!-- 新增景點 Modal -->
+    <div id="addSpotModal" class="spot-modal">
+        <div class="modal-content">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-slate-800">新增景點</h3>
+                    <button onclick="closeAddSpotModal()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                        <i class="fas fa-times text-slate-500"></i>
+                    </button>
+                </div>
+                
+                <!-- 開啟 Google Maps -->
+                <div class="mb-6">
+                    <button onclick="openGoogleMapsPicker()" class="w-full bg-blue-500 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-transform">
+                        <i class="fas fa-map-marked-alt text-xl"></i> 開啟 Google Maps
+                    </button>
+                    <p class="text-xs text-slate-500 mt-2 text-center">在 Google Maps 找到景點後，回來輸入景點名稱即可</p>
+                </div>
+                
+                <!-- 選擇日期 -->
+                <div class="mb-4">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">選擇日期</label>
+                    <select id="newSpotDay" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm bg-white">
+                        <option value="day1">Day 1 - 7/27 (一) 福岡市區</option>
+                        <option value="day2">Day 2 - 7/28 (二) 太宰府 → 由布院</option>
+                        <option value="day3">Day 3 - 7/29 (三) 野生動物園 → 博多</option>
+                        <option value="day4">Day 4 - 7/30 (四) 門司港 → 小倉</option>
+                        <option value="day5">Day 5 - 7/31 (五) 海之中道</option>
+                        <option value="day6">Day 6 - 8/01 (六) 返程</option>
+                    </select>
+                </div>
+                
+                <!-- 景點名稱 -->
+                <div class="mb-4">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">景點名稱 <span class="text-red-500">*</span></label>
+                    <input id="newSpotName" type="text" placeholder="從 Google Maps 複製景點名稱..." class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm">
+                </div>
+                
+                <!-- Mapcode -->
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Mapcode（建議填寫）</label>
+                    <input id="newSpotMapcode" type="text" placeholder="例：13 294 821*15" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm">
+                    <div class="mt-2 bg-blue-50 rounded-xl p-3 text-xs text-slate-600">
+                        <p class="font-bold mb-1">💡 如何查詢 Mapcode：</p>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>開啟 <a href="https://www.mapion.co.jp" target="_blank" class="text-blue-600 underline">Mapion 網站</a></li>
+                            <li>搜尋景點名稱（日文或中文）</li>
+                            <li>點擊地點後，看左上角的「マピコード」</li>
+                            <li>複製數字（例：13 294 821*15）回來貼上</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <!-- 按鈕 -->
+                <div class="flex gap-3">
+                    <button onclick="closeAddSpotModal()" class="flex-1 bg-slate-100 text-slate-700 font-bold py-3 rounded-xl">取消</button>
+                    <button onclick="saveNewSpot()" class="flex-1 bg-green-500 text-white font-bold py-3 rounded-xl">確定新增</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== 行程編輯功能 ==========
+        // 注意：isEditMode 已在主 script 中定義
+        
+        function toggleEditMode() {
+            isEditMode = !isEditMode;
+            const btn = document.getElementById('editModeBtn');
+            const addSection = document.getElementById('addSpotSection');
+            const itinerary = document.getElementById('itinerary');
+            
+            if (isEditMode) {
+                btn.textContent = '完成';
+                btn.classList.remove('bg-blue-100', 'text-blue-600');
+                btn.classList.add('bg-green-100', 'text-green-600');
+                addSection.classList.remove('hidden');
+                itinerary.classList.add('edit-mode');
+                // 顯示刪除按鈑，隱藏 Google Maps 按鈑
+                document.querySelectorAll('.delete-btn').forEach(b => b.classList.remove('hidden'));
+                document.querySelectorAll('.nav-map-btn').forEach(b => b.classList.add('hidden'));
+            } else {
+                btn.textContent = '編輯';
+                btn.classList.remove('bg-green-100', 'text-green-600');
+                btn.classList.add('bg-blue-100', 'text-blue-600');
+                addSection.classList.add('hidden');
+                itinerary.classList.remove('edit-mode');
+                // 隱藏刪除按鈑，顯示 Google Maps 按鈑
+                document.querySelectorAll('.delete-btn').forEach(b => b.classList.add('hidden'));
+                document.querySelectorAll('.nav-map-btn').forEach(b => b.classList.remove('hidden'));
+            }
+        }
+        
+        // 添加刪除按鈕到所有景點卡片
+        function addDeleteButtons() {
+            const cards = document.querySelectorAll('#itinerary .spot-card');
+            cards.forEach((card, index) => {
+                // 檢查是否已經有刪除按鈕
+                if (card.querySelector('.delete-btn')) {
+                    card.querySelector('.delete-btn').classList.remove('hidden');
+                    return;
+                }
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn text-red-500 w-8 h-8 rounded-full bg-red-50 flex items-center justify-center ml-2';
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    if (confirm('確定要刪除這個景點嗎？')) {
+                        card.remove();
+                        saveItinerary();
+                    }
+                };
+                
+                const chevronContainer = card.querySelector('.fa-chevron-down')?.parentElement;
+                if (chevronContainer) {
+                    chevronContainer.appendChild(deleteBtn);
+                }
+            });
+        }
+        
+        // 刪除景點（供新增時使用）
+        function deleteSpot(card) {
+            if (confirm('確定要刪除這個景點嗎？')) {
+                card.remove();
+                saveItinerary();
+            }
+        }
+        
+        // 移除刪除按鈕
+        function removeDeleteButtons() {
+            const deleteBtns = document.querySelectorAll('.delete-btn');
+            deleteBtns.forEach(btn => btn.remove());
+        }
+        
+        // 開啟新增景點 Modal
+        function openAddSpotModal() {
+            document.getElementById('addSpotModal').classList.add('active');
+        }
+        
+        // 關閉新增景點 Modal
+        function closeAddSpotModal() {
+            document.getElementById('addSpotModal').classList.remove('active');
+            // 清空表單
+            document.getElementById('newSpotName').value = '';
+            document.getElementById('newSpotAddress').value = '';
+            document.getElementById('newSpotMapcode').value = '';
+            document.getElementById('newSpotNote').value = '';
+        }
+        
+        // 初始化拖動排序
+        function initSortable() {
+            const dayContainers = document.querySelectorAll('#itineraryList > div');
+            dayContainers.forEach(container => {
+                new Sortable(container, {
+                    group: 'shared', // 允許跨日期拖動
+                    animation: 150,
+                    handle: '.spot-card', // 整個卡片都可以拖
+                    delay: 500, // 長按 500ms 才開始拖動
+                    delayOnTouchOnly: true,
+                    ghostClass: 'bg-blue-50',
+                    onStart: function(evt) {
+                        // 開始拖動時顯示提示
+                        if (navigator.vibrate) navigator.vibrate(50);
+                    },
+                    onEnd: function(evt) {
+                        saveItinerary();
+                        // 如果跨日期移動，更新顯示
+                        if (evt.to !== evt.from) {
+                            updateDayLabels();
+                        }
+                    }
+                });
+            });
+        }
+        
+        // 更新日期標籤（拖動後可能需要調整）
+        function updateDayLabels() {
+            // 可選：在這裡添加更新日期標籤的邏輯
+        }
+        
+        // 開啟 Google Maps 選取地點
+        function openGoogleMapsPicker() {
+            window.open('https://www.google.com/maps/search/福岡+景點', '_blank');
+        }
+        
+        // 解析 Google Maps 連結（保留但簡化）
+        function parseGoogleMapsUrl() {
+            alert('請直接複製 Google Maps 的名稱和地址到下方欄位');
+        }
+        
+        // 儲存新增景點
+        function saveNewSpot() {
+            const day = document.getElementById('newSpotDay').value;
+            const name = document.getElementById('newSpotName').value.trim();
+            const mapcode = document.getElementById('newSpotMapcode').value.trim();
+            
+            if (!name) {
+                alert('請輸入景點名稱');
+                return;
+            }
+            
+            // 找到對應的 Day 區塊
+            const dayMap = {
+                'day1': 'Day 1',
+                'day2': 'Day 2', 
+                'day3': 'Day 3',
+                'day4': 'Day 4',
+                'day5': 'Day 5',
+                'day6': 'Day 6'
+            };
+            const dayText = dayMap[day];
+            
+            const dayHeaders = document.querySelectorAll('#itineraryList > div > p');
+            let targetDay = null;
+            
+            dayHeaders.forEach(header => {
+                if (header.textContent.includes(dayText)) {
+                    targetDay = header.parentElement;
+                }
+            });
+            
+            if (!targetDay) {
+                alert('找不到對應的日期');
+                return;
+            }
+            
+            // 建立新景點卡片
+            const newCard = document.createElement('div');
+            newCard.className = 'spot-card bg-white border border-slate-100 rounded-2xl shadow-sm mb-3 overflow-hidden';
+            
+            // 如果有 Mapcode 就顯示
+            const mapcodeHtml = mapcode ? `<div class="mapcode-display">${mapcode}</div>` : '';
+            
+            newCard.innerHTML = `
+                <div class="p-4 cursor-pointer" onclick="toggleSpot(this)">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <p class="font-bold text-slate-800 text-lg">${name}</p>
+                            ${mapcodeHtml}
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-chevron-down text-slate-400 transition-transform mt-1"></i>
+                            <button onclick="event.stopPropagation(); deleteSpot(this.closest('.spot-card'))" class="delete-btn hidden text-red-500 w-8 h-8 rounded-full bg-red-50 flex items-center justify-center ml-2">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="spot-detail hidden px-4 pb-4 border-t border-slate-100 pt-3">
+                    <p class="text-sm text-slate-500 mb-2"><i class="fas fa-info-circle text-blue-500 mr-2"></i>點擊上方 Google Maps 按鈕導航</p>
+                    <button onclick="window.open('https://www.google.com/maps/search/${encodeURIComponent(name + ' 福岡')}', '_blank')" class="w-full bg-blue-500 text-white py-2 rounded-xl font-bold text-sm">
+                        <i class="fas fa-map-location-dot mr-2"></i>開啟 Google Maps
+                    </button>
+                </div>
+            `;
+            
+            // 插入到 Day 區塊
+            targetDay.appendChild(newCard);
+            
+            // 如果在編輯模式，顯示刪除按鈕
+            if (isEditMode) {
+                const deleteBtn = newCard.querySelector('.delete-btn');
+                if (deleteBtn) deleteBtn.classList.remove('hidden');
+            }
+            
+            saveItinerary();
+            closeAddSpotModal();
+            alert('景點已新增！');
+        }
+        
+        // 儲存行程到 localStorage
+        function saveItinerary() {
+            const itineraryHTML = document.getElementById('itineraryList').innerHTML;
+            localStorage.setItem('kyushu_itinerary', itineraryHTML);
+        }
+        
+        // 頁面載入時恢復行程
+        function loadItinerary() {
+            const saved = localStorage.getItem('kyushu_itinerary');
+            if (saved) {
+                document.getElementById('itineraryList').innerHTML = saved;
+            }
+        }
+        
+        // 修復所有景點卡片的按鈑結構
+        function fixAllSpotCards() {
+            const cards = document.querySelectorAll('#itineraryList .spot-card');
+            cards.forEach(card => {
+                // 檢查是否已修復（有 nav-map-btn 或 delete-btn）
+                if (card.querySelector('.nav-map-btn') || card.querySelector('.delete-btn')) {
+                    return; // 已修復，跳過
+                }
+                
+                // 取得卡片標題區域
+                const header = card.querySelector('.p-4');
+                if (!header) return;
+                
+                // 取得景點名稱
+                const nameEl = card.querySelector('.font-bold.text-slate-800');
+                const spotName = nameEl ? nameEl.textContent.trim() : '';
+                
+                // 取得展開內容裡的地址
+                const addressEl = card.querySelector('.spot-detail .fa-map-marker-alt');
+                let address = spotName + ' 福岡';
+                if (addressEl && addressEl.parentElement) {
+                    const addressText = addressEl.parentElement.textContent.trim();
+                    if (addressText && addressText.length > 3) address = addressText;
+                }
+                
+                // 找到標題區的 flex 容器
+                const flexContainer = header.querySelector('.flex.justify-between, .flex');
+                if (!flexContainer) return;
+                
+                // 找到右側區域或創建
+                let rightSection = flexContainer.querySelector('.flex.items-center');
+                if (!rightSection) {
+                    rightSection = document.createElement('div');
+                    rightSection.className = 'flex items-center gap-2';
+                    
+                    // 找到 chevron 並移到新容器
+                    const chevron = flexContainer.querySelector('.fa-chevron-down');
+                    if (chevron) {
+                        chevron.style.cursor = 'pointer';
+                        rightSection.appendChild(chevron);
+                    }
+                    flexContainer.appendChild(rightSection);
+                }
+                
+                // 創建 Google Maps 按鈑
+                const mapBtn = document.createElement('button');
+                mapBtn.className = 'nav-map-btn w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center';
+                mapBtn.innerHTML = '<i class="fas fa-map-location-dot"></i>';
+                mapBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    window.open('https://www.google.com/maps/search/' + encodeURIComponent(address), '_blank');
+                };
+                
+                // 創建刪除按鈑
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn hidden text-red-500 w-8 h-8 rounded-full bg-red-50 flex items-center justify-center';
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    if (confirm('確定要刪除這個景點嗎？')) {
+                        card.remove();
+                        saveItinerary();
+                    }
+                };
+                
+                // 插入到 rightSection 的開頭
+                rightSection.insertBefore(mapBtn, rightSection.firstChild);
+                rightSection.insertBefore(deleteBtn, rightSection.firstChild);
+            });
+            
+            // 根據當前模式顯示正確的按鈑
+            const itinerary = document.getElementById('itinerary');
+            if (itinerary.classList.contains('edit-mode')) {
+                document.querySelectorAll('.delete-btn').forEach(b => b.classList.remove('hidden'));
+                document.querySelectorAll('.nav-map-btn').forEach(b => b.classList.add('hidden'));
+            } else {
+                document.querySelectorAll('.delete-btn').forEach(b => b.classList.add('hidden'));
+                document.querySelectorAll('.nav-map-btn').forEach(b => b.classList.remove('hidden'));
+            }
+        }
+        
+        // 頁面切換到行程時修復
+        const originalShowPage = showPage;
+        showPage = function(pageId, btn) {
+            originalShowPage(pageId, btn);
+            if (pageId === 'itinerary') {
+                fixAllSpotCards();
+            }
+        };
+        
+        // 初始化行程
+        loadItinerary();
+        
+        // 立即修復所有卡片（頁面載入時）
+        fixAllSpotCards();
+        
+        // 頁面載入後初始化拖動
+        setTimeout(initSortable, 100);
     </script>
 </body>
 </html>
