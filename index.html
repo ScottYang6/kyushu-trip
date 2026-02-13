@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小N 九州 Jarvis 旅遊助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f1f5f9; }
+        .iphone-x { width: 375px; height: 812px; background: white; border: 12px solid #333; border-radius: 40px; position: relative; margin: 20px auto; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+        .iphone-x .tab-bar { position: absolute; bottom: 0; left: 0; right: 0; z-index: 50; }
+        .scroll-hide::-webkit-scrollbar { display: none; }
+        .tab-active { color: #3b82f6 !important; }
+        .page { display: none; }
+        .page-active { display: block; }
+        
+        /* 景點卡片展開樣式 */
+        .spot-card { transition: all 0.3s ease; }
+        .spot-card.active { border-color: #3b82f6; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15); }
+        .spot-card.active .fa-chevron-down { transform: rotate(180deg); }
+        .spot-detail { transition: all 0.3s ease; }
+        .spot-detail:not(.hidden) { animation: slideDown 0.3s ease; }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .mapcode-display {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #dc2626;
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 6px;
+        }
+        
+        /* 編輯模式樣式控制 */
+        .edit-mode .delete-btn { display: flex !important; }
+        .edit-mode .nav-map-btn { display: none !important; }
+        .edit-mode .add-spot-btn { display: block !important; }
+        
+        .modal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
+        .modal-active { display: flex; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+    <div class="iphone-x flex flex-col">
+        <!-- Status Bar -->
+        <div class="h-10 flex justify-between items-center px-8 text-xs font-bold bg-white z-20">
+            <span>9:41</span>
+            <div class="flex gap-1">
+                <i class="fas fa-signal"></i>
+                <i class="fas fa-wifi"></i>
+                <i class="fas fa-battery-full"></i>
+            </div>
+        </div>
+
+        <!-- Main Scroll Area -->
+        <div class="flex-1 overflow-y-auto scroll-hide" id="mainScroll">
+            
+            <!-- Page 1: Dashboard -->
+            <div id="home" class="page page-active px-6 pt-4 pb-24">
+                <div class="mb-6">
+                    <h1 class="text-2xl font-bold text-slate-800 text-center">九州之旅 🇯🇵</h1>
+                    <p class="text-center text-slate-500 text-sm">2025/07/27 - 08/01</p>
+                </div>
+                
+                <!-- Weather -->
+                <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl p-5 text-white shadow-lg mb-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-lg opacity-80">福岡, 日本</p>
+                            <p class="text-4xl font-bold">29°C</p>
+                            <p class="text-xs mt-2">☁️ 多雲時晴，適合出遊</p>
+                        </div>
+                        <i class="fas fa-cloud-sun text-5xl text-blue-200"></i>
+                    </div>
+                </div>
+
+                <div class="mb-6 text-slate-800">
+                    <h2 class="text-lg font-bold mb-4">即將前往</h2>
+                    <div class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex gap-4 relative">
+                        <div class="w-16 h-16 bg-slate-200 rounded-xl overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1590559899731-a382839e5549?q=80&w=200&auto=format&fit=crop" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-bold text-slate-800">福岡國際機場</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Day 1 起點</p>
+                            <div class="mt-2 flex items-center gap-2">
+                                <span class="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-bold">7/27 出發</span>
+                            </div>
+                        </div>
+                        <button onclick="window.open('https://www.google.com/maps/search/' + encodeURIComponent('福岡機場'), '_blank')" class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white shadow-md">
+                            <i class="fas fa-map-location-dot"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-8">
+                    <h2 class="text-lg font-bold mb-4 text-slate-800">後續行程</h2>
+                    <div class="bg-slate-50 rounded-3xl p-5 space-y-6 relative overflow-hidden">
+                        <div class="absolute left-7 top-10 bottom-10 w-0.5 bg-blue-200"></div>
+                        
+                        <div class="flex items-start gap-4 relative z-10">
+                            <div class="w-3 h-3 bg-blue-500 rounded-full mt-1.5 ring-4 ring-white"></div>
+                            <div>
+                                <p class="text-sm font-bold text-slate-800">11:00 天神商圈</p>
+                                <p class="text-xs text-slate-500">購物、美食、地下街</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4 relative z-10">
+                            <div class="w-3 h-3 bg-blue-500 rounded-full mt-1.5 ring-4 ring-white"></div>
+                            <div>
+                                <p class="text-sm font-bold text-slate-800">12:30 一蘭拉麵 總本店</p>
+                                <p class="text-xs text-slate-500">🍜 必吃！</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4 relative z-10">
+                            <div class="w-3 h-3 bg-blue-500 rounded-full mt-1.5 ring-4 ring-white"></div>
+                            <div>
+                                <p class="text-sm font-bold text-slate-800">18:00 博多華味鳥</p>
+                                <p class="text-xs text-slate-500">🍲 九州水炊鍋名店</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4 relative z-10">
+                            <div class="w-3 h-3 bg-green-500 rounded-full mt-1.5 ring-4 ring-white"></div>
+                            <div>
+                                <p class="text-sm font-bold text-slate-800">20:00 Check-in 索拉利亞西鐵酒店</p>
+                                <p class="text-xs text-slate-500">🏨 福岡市區住宿</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page 2: Itinerary -->
+            <div id="itinerary" class="page px-6 pt-4 pb-24">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800">詳細行程</h2>
+                </div>
+                <div id="itineraryList" class="space-y-6">
+                    
+                    <!-- Day 1 -->
+                    <div class="mb-6">
+                        <p class="font-bold text-blue-600 mb-3">Day 1 - 7/27 (一) 福岡市區</p>
+                        
+                        <div class="spot-card bg-white border border-slate-100 rounded-2xl shadow-sm mb-3 overflow-hidden">
+                            <div class="p-4 cursor-pointer" onclick="toggleSpot(this)">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <p class="font-bold text-slate-800 text-lg">福岡國際機場</p>
+                                        <div class="mapcode-display">13 294 821*15</div>
+                                    </div>
+                                    <i class="fas fa-chevron-down text-slate-400 transition-transform mt-1"></i>
+                                </div>
+                            </div>
+                            <div class="spot-detail hidden px-4 pb-4 border-t border-slate-100 pt-3">
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-clock text-blue-500 mr-2"></i>09:00 抵達 → 搭接駁巴士到國內線</p>
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-map-marker-alt text-red-500 mr-2"></i>福岡市博多區</p>
+                                <p class="text-sm text-slate-600 mb-3"><i class="fas fa-info-circle text-green-500 mr-2"></i>國際線航廈 → 免費接駁巴士5號站牌 → 國內線航廈 → 地鐵</p>
+                                <button onclick="window.open('https://www.google.com/maps/search/' + encodeURIComponent('福岡機場 福岡市博多區'), '_blank')" class="w-full bg-blue-500 text-white py-2 rounded-xl font-bold text-sm">
+                                    <i class="fas fa-map-location-dot mr-2"></i>開啟 Google Maps
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="spot-card bg-white border border-slate-100 rounded-2xl shadow-sm mb-3 overflow-hidden">
+                            <div class="p-4 cursor-pointer" onclick="toggleSpot(this)">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <p class="font-bold text-slate-800 text-lg">中洲川端站 行李寄存</p>
+                                        <div class="mapcode-display">13 323 126*44</div>
+                                    </div>
+                                    <i class="fas fa-chevron-down text-slate-400 transition-transform mt-1"></i>
+                                </div>
+                            </div>
+                            <div class="spot-detail hidden px-4 pb-4 border-t border-slate-100 pt-3">
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-clock text-blue-500 mr-2"></i>地鐵寄放：首班車～末班車</p>
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-store text-green-500 mr-2"></i>Baggage Station：09:30-21:00（周日休）</p>
+                                <p class="text-sm text-slate-600 mb-3"><i class="fas fa-map-marker-alt text-red-500 mr-2"></i>博多區中洲5-1-22</p>
+                                <button onclick="window.open('https://www.google.com/maps/search/' + encodeURIComponent('中洲川端站 福岡市博多區中洲'), '_blank')" class="w-full bg-blue-500 text-white py-2 rounded-xl font-bold text-sm">
+                                    <i class="fas fa-map-location-dot mr-2"></i>開啟 Google Maps
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="spot-card bg-white border border-slate-100 rounded-2xl shadow-sm mb-3 overflow-hidden">
+                            <div class="p-4 cursor-pointer" onclick="toggleSpot(this)">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <p class="font-bold text-slate-800 text-lg">一蘭拉麵 總本店</p>
+                                        <div class="mapcode-display">13 318 631*71</div>
+                                    </div>
+                                    <i class="fas fa-chevron-down text-slate-400 transition-transform mt-1"></i>
+                                </div>
+                            </div>
+                            <div class="spot-detail hidden px-4 pb-4 border-t border-slate-100 pt-3">
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-clock text-blue-500 mr-2"></i>24小時營業</p>
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-map-marker-alt text-red-500 mr-2"></i>福岡市博多區中洲5-3-2</p>
+                                <p class="text-sm text-slate-600 mb-3"><i class="fas fa-star text-yellow-500 mr-2"></i>全球唯一總本店，限定五角碗</p>
+                                <button onclick="window.open('https://www.google.com/maps/search/' + encodeURIComponent('一蘭拉麵 總本店 福岡市博多區中洲5-3-2'), '_blank')" class="w-full bg-red-500 text-white py-2 rounded-xl font-bold text-sm">
+                                    <i class="fas fa-map-location-dot mr-2"></i>開啟 Google Maps
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="spot-card bg-blue-50 border border-blue-100 rounded-2xl shadow-sm overflow-hidden">
+                            <div class="p-4 cursor-pointer" onclick="toggleSpot(this)">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <p class="font-bold text-slate-800 text-lg">🏨 福岡索拉利亞西鐵酒店</p>
+                                        <div class="mapcode-display mt-2">13 318 605*31</div>
+                                    </div>
+                                    <i class="fas fa-chevron-down text-slate-400 transition-transform mt-1"></i>
+                                </div>
+                            </div>
+                            <div class="spot-detail hidden px-4 pb-4 border-t border-blue-200 pt-3">
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-hotel text-blue-500 mr-2"></i>Solaria Nishitetsu Hotel（不含早餐）</p>
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-map-marker-alt text-red-500 mr-2"></i>福岡市中央區天神2-11-3</p>
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-subway text-purple-500 mr-2"></i>天神站直結，交通超便利</p>
+                                <p class="text-sm text-slate-600 mb-3"><i class="fas fa-info-circle text-green-500 mr-2"></i>住4晚 (Day 1, 3, 4, 5)</p>
+                                <button onclick="window.open('https://www.google.com/maps/search/' + encodeURIComponent('福岡索拉利亞西鐵酒店 福岡市中央區天神2-11-3'), '_blank')" class="w-full bg-blue-500 text-white py-2 rounded-xl font-bold text-sm">
+                                    <i class="fas fa-map-location-dot mr-2"></i>開啟 Google Maps
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Day 2 -->
+                    <div class="mb-6">
+                        <p class="font-bold text-blue-600 mb-3">Day 2 - 7/28 (二) 太宰府 → 由布院</p>
+                        
+                        <div class="spot-card bg-white border border-slate-100 rounded-2xl shadow-sm mb-3 overflow-hidden">
+                            <div class="p-4 cursor-pointer" onclick="toggleSpot(this)">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <p class="font-bold text-slate-800 text-lg">太宰府天滿宮</p>
+                                        <div class="mapcode-display">55 364 073*51</div>
+                                    </div>
+                                    <i class="fas fa-chevron-down text-slate-400 transition-transform mt-1"></i>
+                                </div>
+                            </div>
+                            <div class="spot-detail hidden px-4 pb-4 border-t border-slate-100 pt-3">
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-clock text-blue-500 mr-2"></i>06:30-18:30</p>
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-map-marker-alt text-red-500 mr-2"></i>福岡縣太宰府市宰府4-7-1</p>
+                                <p class="text-sm text-slate-600 mb-3"><i class="fas fa-torii-gate text-purple-500 mr-2"></i>學問之神，表參道逛街</p>
+                                <button onclick="window.open('https://www.google.com/maps/search/' + encodeURIComponent('太宰府天滿宮 福岡縣太宰府市宰府4-7-1'), '_blank')" class="w-full bg-purple-500 text-white py-2 rounded-xl font-bold text-sm">
+                                    <i class="fas fa-map-location-dot mr-2"></i>開啟 Google Maps
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="spot-card bg-white border border-slate-100 rounded-2xl shadow-sm mb-3 overflow-hidden">
+                            <div class="p-4 cursor-pointer" onclick="toggleSpot(this)">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <p class="font-bold text-slate-800 text-lg">Yufuin Rakuyu 湯布院 樂涌</p>
+                                        <div class="mapcode-display">269 359 581*14</div>
+                                    </div>
+                                    <i class="fas fa-chevron-down text-slate-400 transition-transform mt-1"></i>
+                                </div>
+                            </div>
+                            <div class="spot-detail hidden px-4 pb-4 border-t border-slate-100 pt-3">
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-hotel text-green-500 mr-2"></i>含早餐晚餐，溫泉旅館</p>
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-map-marker-alt text-red-500 mr-2"></i>大分縣由布市湯布院町川上269</p>
+                                <p class="text-sm text-slate-600 mb-3"><i class="fas fa-hot-tub text-blue-400 mr-2"></i>一泊二食，溫泉體驗</p>
+                                <button onclick="window.open('https://www.google.com/maps/search/' + encodeURIComponent('湯布院樂涌 大分縣由布市湯布院町川上269'), '_blank')" class="w-full bg-green-500 text-white py-2 rounded-xl font-bold text-sm">
+                                    <i class="fas fa-map-location-dot mr-2"></i>開啟 Google Maps
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Day 3 -->
+                    <div class="mb-6">
+                        <p class="font-bold text-blue-600 mb-3">Day 3 - 7/29 (三) 野生動物園 → 博多</p>
+                        
+                        <div class="spot-card bg-white border border-slate-100 rounded-2xl shadow-sm mb-3 overflow-hidden">
+                            <div class="p-4 cursor-pointer" onclick="toggleSpot(this)">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <p class="font-bold text-slate-800 text-lg">九州非洲野生動物園</p>
+                                        <div class="mapcode-display">13 594 009*72</div>
+                                    </div>
+                                    <i class="fas fa-chevron-down text-slate-400 transition-transform mt-1"></i>
+                                </div>
+                            </div>
+                            <div class="spot-detail hidden px-4 pb-4 border-t border-slate-100 pt-3">
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-clock text-blue-500 mr-2"></i>09:30-16:30（最後入園16:00）</p>
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-ticket-alt text-green-500 mr-2"></i>成人 ¥2,600 / 兒童 ¥1,500</p>
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-map-marker-alt text-red-500 mr-2"></i>福岡縣東峰村大字宝珠山1087</p>
+                                <p class="text-sm text-slate-600 mb-3"><i class="fas fa-paw text-orange-500 mr-2"></i>可餵食獅子、大象，自駕遊園</p>
+                                <button onclick="window.open('https://www.google.com/maps/search/' + encodeURIComponent('九州自然動物公園 アフリカンサファリ'), '_blank')" class="w-full bg-orange-500 text-white py-2 rounded-xl font-bold text-sm">
+                                    <i class="fas fa-map-location-dot mr-2"></i>開啟 Google Maps
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="spot-card bg-white border border-slate-100 rounded-2xl shadow-sm mb-3 overflow-hidden">
+                            <div class="p-4 cursor-pointer" onclick="toggleSpot(this)">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <p class="font-bold text-slate-800 text-lg">日田市</p>
+                                        <div class="mapcode-display">13 569 233*24</div>
+                                    </div>
+                                    <i class="fas fa-chevron-down text-slate-400 transition-transform mt-1"></i>
+                                </div>
+                            </div>
+                            <div class="spot-detail hidden px-4 pb-4 border-t border-slate-100 pt-3">
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-clock text-blue-500 mr-2"></i>自由散策</p>
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-map-marker-alt text-red-500 mr-2"></i>福岡縣日田市</p>
+                                <p class="text-sm text-slate-600 mb-3"><i class="fas fa-archway text-purple-500 mr-2"></i>豆田町老街、三隈川、醬油老店</p>
+                                <button onclick="window.open('https://www.google.com/maps/search/' + encodeURIComponent('日田市 豆田町'), '_blank')" class="w-full bg-purple-500 text-white py-2 rounded-xl font-bold text-sm">
+                                    <i class="fas fa-map-location-dot mr-2"></i>開啟 Google Maps
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="spot-card bg-white border border-slate-100 rounded-2xl shadow-sm mb-3 overflow-hidden">
+                            <div class="p-4 cursor-pointer" onclick="toggleSpot(this)">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <p class="font-bold text-slate-800 text-lg">Canal City Hakata 博多運河城</p>
+                                        <div class="mapcode-display">13 319 347*77</div>
+                                    </div>
+                                    <i class="fas fa-chevron-down text-slate-400 transition-transform mt-1"></i>
+                                </div>
+                            </div>
+                            <div class="spot-detail hidden px-4 pb-4 border-t border-slate-100 pt-3">
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-clock text-blue-500 mr-2"></i>10:00-21:00（店鋪）</p>
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-film text-pink-500 mr-2"></i>鋼彈表演：19:00 / 21:00</p>
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-map-marker-alt text-red-500 mr-2"></i>福岡市博多區住吉1-2</p>
+                                <p class="text-sm text-slate-600 mb-3"><i class="fas fa-shopping-bag text-blue-500 mr-2"></i>購物、美食、噴水秀</p>
+                                <button onclick="window.open('https://www.google.com/maps/search/' + encodeURIComponent('Canal City Hakata'), '_blank')" class="w-full bg-blue-500 text-white py-2 rounded-xl font-bold text-sm">
+                                    <i class="fas fa-map-location-dot mr-2"></i>開啟 Google Maps
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="spot-card bg-blue-50 border border-blue-100 rounded-2xl shadow-sm overflow-hidden">
+                            <div class="p-4 cursor-pointer" onclick="toggleSpot(this)">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <p class="font-bold text-slate-800 text-lg">🏨 福岡索拉利亞西鐵酒店</p>
+                                        <div class="mapcode-display mt-2">13 318 605*31</div>
+                                    </div>
+                                    <i class="fas fa-chevron-down text-slate-400 transition-transform mt-1"></i>
+                                </div>
+                            </div>
+                            <div class="spot-detail hidden px-4 pb-4 border-t border-blue-200 pt-3">
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-hotel text-blue-500 mr-2"></i>第二晚住宿（回博多）</p>
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-map-marker-alt text-red-500 mr-2"></i>福岡市中央區天神2-11-3</p>
+                                <p class="text-sm text-slate-600 mb-3"><i class="fas fa-subway text-purple-500 mr-2"></i>天神站直結</p>
+                                <button onclick="window.open('https://www.google.com/maps/search/' + encodeURIComponent('福岡索拉利亞西鐵酒店'), '_blank')" class="w-full bg-blue-500 text-white py-2 rounded-xl font-bold text-sm">
+                                    <i class="fas fa-map-location-dot mr-2"></i>開啟 Google Maps
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Day 4 -->
+                    <div class="mb-6">
+                        <p class="font-bold text-blue-600 mb-3">Day 4 - 7/30 (四) 門司港 → 小倉</p>
+                        
+                        <div class="spot-card bg-white border border-slate-100 rounded-2xl shadow-sm mb-3 overflow-hidden">
+                            <div class="p-4 cursor-pointer" onclick="toggleSpot(this)">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <p class="font-bold text-slate-800 text-lg">門司港復古區</p>
+                                        <div class="mapcode-display">13 471 222*72</div>
+                                    </div>
+                                    <i class="fas fa-chevron-down text-slate-400 transition-transform mt-1"></i>
+                                </div>
+                            </div>
+                            <div class="spot-detail hidden px-4 pb-4 border-t border-slate-100 pt-3">
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-clock text-blue-500 mr-2"></i>藍翼橋開橋：每小時10:00-16:00</p>
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-map-marker-alt text-red-500 mr-2"></i>福岡縣北九州市門司區</p>
+                                <p class="text-sm text-slate-600 mb-3"><i class="fas fa-camera text-purple-500 mr-2"></i>懷舊建築、海峽廣場、普樂美雅飯店</p>
+                                <button onclick="window.open('https://www.google.com/maps/search/' + encodeURIComponent('門司港レトロ'), '_blank')" class="w-full bg-purple-500 text-white py-2 rounded-xl font-bold text-sm">
+                                    <i class="fas fa-map-location-dot mr-2"></i>開啟 Google Maps
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="spot-card bg-white border border-slate-100 rounded-2xl shadow-sm mb-3 overflow-hidden">
+                            <div class="p-4 cursor-pointer" onclick="toggleSpot(this)">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <p class="font-bold text-slate-800 text-lg">九州鐵道歷史館</p>
+                                        <div class="mapcode-display">13 471 222*88</div>
+                                    </div>
+                                    <i class="fas fa-chevron-down text-slate-400 transition-transform mt-1"></i>
+                                </div>
+                            </div>
+                            <div class="spot-detail hidden px-4 pb-4 border-t border-slate-100 pt-3">
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-clock text-blue-500 mr-2"></i>09:00-17:00（週一休）</p>
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-ticket-alt text-green-500 mr-2"></i>門票 ¥300</p>
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-map-marker-alt text-red-500 mr-2"></i>北九州市門司區港町2-1</p>
+                                <p class="text-sm text-slate-600 mb-3"><i class="fas fa-train text-blue-500 mr-2"></i>蒸氣火車展示、模擬駕駛</p>
+                                <button onclick="window.open('https://www.google.com/maps/search/' + encodeURIComponent('九州鉄道記念館'), '_blank')" class="w-full bg-blue-500 text-white py-2 rounded-xl font-bold text-sm">
+                                    <i class="fas fa-map-location-dot mr-2"></i>開啟 Google Maps
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="spot-card bg-white border border-slate-100 rounded-2xl shadow-sm mb-3 overflow-hidden">
+                            <div class="p-4 cursor-pointer" onclick="toggleSpot(this)">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <p class="font-bold text-slate-800 text-lg">The Outlets Kitakyushu</p>
+                                        <div class="mapcode-display">13 464 334*16</div>
+                                    </div>
+                                    <i class="fas fa-chevron-down text-slate-400 transition-transform mt-1"></i>
+                                </div>
+                            </div>
+                            <div class="spot-detail hidden px-4 pb-4 border-t border-slate-100 pt-3">
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-clock text-blue-500 mr-2"></i>10:00-21:00</p>
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-map-marker-alt text-red-500 mr-2"></i>北九州市八幡東区東田4-1-1</p>
+                                <p class="text-sm text-slate-600 mb-3"><i class="fas fa-shopping-bag text-pink-500 mr-2"></i>品牌折扣店、購物中心</p>
+                                <button onclick="window.open('https://www.google.com/maps/search/' + encodeURIComponent('The Outlets Kitakyushu'), '_blank')" class="w-full bg-pink-500 text-white py-2 rounded-xl font-bold text-sm">
+                                    <i class="fas fa-map-location-dot mr-2"></i>開啟 Google Maps
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="spot-card bg-blue-50 border border-blue-100 rounded-2xl shadow-sm overflow-hidden">
+                            <div class="p-4 cursor-pointer" onclick="toggleSpot(this)">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <p class="font-bold text-slate-800 text-lg">🏨 福岡索拉利亞西鐵酒店</p>
+                                        <div class="mapcode-display mt-2">13 318 605*31</div>
+                                    </div>
+                                    <i class="fas fa-chevron-down text-slate-400 transition-transform mt-1"></i>
+                                </div>
+                            </div>
+                            <div class="spot-detail hidden px-4 pb-4 border-t border-blue-200 pt-3">
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-hotel text-blue-500 mr-2"></i>第三晚住宿</p>
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-map-marker-alt text-red-500 mr-2"></i>福岡市中央區天神2-11-3</p>
+                                <button onclick="window.open('https://www.google.com/maps/search/' + encodeURIComponent('福岡索拉利亞西鐵酒店'), '_blank')" class="w-full bg-blue-500 text-white py-2 rounded-xl font-bold text-sm">
+                                    <i class="fas fa-map-location-dot mr-2"></i>開啟 Google Maps
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Day 5 -->
+                    <div class="mb-6">
+                        <p class="font-bold text-blue-600 mb-3">Day 5 - 7/31 (五) 海之中道</p>
+                        
+                        <div class="spot-card bg-white border border-slate-100 rounded-2xl shadow-sm mb-3 overflow-hidden">
+                            <div class="p-4 cursor-pointer" onclick="toggleSpot(this)">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <p class="font-bold text-slate-800 text-lg">海洋世界海之中道</p>
+                                        <div class="mapcode-display">13 305 351*24</div>
+                                    </div>
+                                    <i class="fas fa-chevron-down text-slate-400 transition-transform mt-1"></i>
+                                </div>
+                            </div>
+                            <div class="spot-detail hidden px-4 pb-4 border-t border-slate-100 pt-3">
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-clock text-blue-500 mr-2"></i>09:00-17:30（週末延長）</p>
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-ticket-alt text-green-500 mr-2"></i>門票請查官網</p>
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-map-marker-alt text-red-500 mr-2"></i>福岡市東区海の中道18-28</p>
+                                <p class="text-sm text-slate-600 mb-3"><i class="fas fa-fish text-blue-500 mr-2"></i>海豚秀、海豹秀、觸摸池</p>
+                                <button onclick="window.open('https://www.google.com/maps/search/' + encodeURIComponent('マリンワールド海の中道'), '_blank')" class="w-full bg-blue-500 text-white py-2 rounded-xl font-bold text-sm">
+                                    <i class="fas fa-map-location-dot mr-2"></i>開啟 Google Maps
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="spot-card bg-white border border-slate-100 rounded-2xl shadow-sm mb-3 overflow-hidden">
+                            <div class="p-4 cursor-pointer" onclick="toggleSpot(this)">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <p class="font-bold text-slate-800 text-lg">海之中道海濱公園</p>
+                                        <div class="mapcode-display">13 305 352*77</div>
+                                    </div>
+                                    <i class="fas fa-chevron-down text-slate-400 transition-transform mt-1"></i>
+                                </div>
+                            </div>
+                            <div class="spot-detail hidden px-4 pb-4 border-t border-slate-100 pt-3">
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-clock text-blue-500 mr-2"></i>09:30-17:30</p>
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-ticket-alt text-green-500 mr-2"></i>入園 ¥450 / 電動車 ¥1,000/3hr</p>
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-map-marker-alt text-red-500 mr-2"></i>福岡市東区西戸崎18-25</p>
+                                <p class="text-sm text-slate-600 mb-3"><i class="fas fa-bicycle text-green-500 mr-2"></i>沙灘、花海、單車遊園</p>
+                                <button onclick="window.open('https://www.google.com/maps/search/' + encodeURIComponent('海の中道海浜公園'), '_blank')" class="w-full bg-green-500 text-white py-2 rounded-xl font-bold text-sm">
+                                    <i class="fas fa-map-location-dot mr-2"></i>開啟 Google Maps
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="spot-card bg-blue-50 border border-blue-100 rounded-2xl shadow-sm overflow-hidden">
+                            <div class="p-4 cursor-pointer" onclick="toggleSpot(this)">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <p class="font-bold text-slate-800 text-lg">🏨 福岡索拉利亞西鐵酒店</p>
+                                        <div class="mapcode-display mt-2">13 318 605*31</div>
+                                    </div>
+                                    <i class="fas fa-chevron-down text-slate-400 transition-transform mt-1"></i>
+                                </div>
+                            </div>
+                            <div class="spot-detail hidden px-4 pb-4 border-t border-blue-200 pt-3">
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-hotel text-blue-500 mr-2"></i>第四晚住宿（最後一晚）</p>
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-map-marker-alt text-red-500 mr-2"></i>福岡市中央區天神2-11-3</p>
+                                <button onclick="window.open('https://www.google.com/maps/search/' + encodeURIComponent('福岡索拉利亞西鐵酒店'), '_blank')" class="w-full bg-blue-500 text-white py-2 rounded-xl font-bold text-sm">
+                                    <i class="fas fa-map-location-dot mr-2"></i>開啟 Google Maps
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Day 6 -->
+                    <div class="mb-6">
+                        <p class="font-bold text-blue-600 mb-3">Day 6 - 8/01 (六) 返程</p>
+                        
+                        <div class="spot-card bg-white border border-slate-100 rounded-2xl shadow-sm mb-3 overflow-hidden">
+                            <div class="p-4 cursor-pointer" onclick="toggleSpot(this)">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <p class="font-bold text-slate-800 text-lg">最後採購</p>
+                                        <div class="mapcode-display">13 318 605*65</div>
+                                    </div>
+                                    <i class="fas fa-chevron-down text-slate-400 transition-transform mt-1"></i>
+                                </div>
+                            </div>
+                            <div class="spot-detail hidden px-4 pb-4 border-t border-slate-100 pt-3">
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-clock text-blue-500 mr-2"></i>依班機時間安排</p>
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-map-marker-alt text-red-500 mr-2"></i>天神商圈、地下街</p>
+                                <p class="text-sm text-slate-600 mb-3"><i class="fas fa-shopping-bag text-purple-500 mr-2"></i>伴手禮、最後補貨</p>
+                                <button onclick="window.open('https://www.google.com/maps/search/' + encodeURIComponent('天神地下街'), '_blank')" class="w-full bg-purple-500 text-white py-2 rounded-xl font-bold text-sm">
+                                    <i class="fas fa-map-location-dot mr-2"></i>開啟 Google Maps
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="spot-card bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
+                            <div class="p-4 cursor-pointer" onclick="toggleSpot(this)">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <p class="font-bold text-slate-800 text-lg">福岡國際機場</p>
+                                        <div class="mapcode-display">13 294 821*15</div>
+                                    </div>
+                                    <i class="fas fa-chevron-down text-slate-400 transition-transform mt-1"></i>
+                                </div>
+                            </div>
+                            <div class="spot-detail hidden px-4 pb-4 border-t border-slate-100 pt-3">
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-plane text-blue-500 mr-2"></i>回程班機</p>
+                                <p class="text-sm text-slate-600 mb-2"><i class="fas fa-map-marker-alt text-red-500 mr-2"></i>福岡市博多區</p>
+                                <p class="text-sm text-slate-600 mb-3"><i class="fas fa-info-circle text-green-500 mr-2"></i>建議提前2小時抵達</p>
+                                <button onclick="window.open('https://www.google.com/maps/search/' + encodeURIComponent('福岡機場'), '_blank')" class="w-full bg-blue-500 text-white py-2 rounded-xl font-bold text-sm">
+                                    <i class="fas fa-map-location-dot mr-2"></i>開啟 Google Maps
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Page 3: Accounting -->
+            <div id="accounting" class="page px-6 pt-4 pb-24">
+                <h2 class="text-2xl font-bold mb-6 text-slate-800">記帳本</h2>
+                <div class="bg-slate-800 text-white rounded-3xl p-6 mb-6 shadow-xl">
+                    <p class="opacity-60 text-sm">今日累積花費</p>
+                    <p class="text-3xl font-bold mt-1">¥ 12,500</p>
+                    <div class="mt-4 pt-4 border-t border-slate-700 flex justify-between text-sm">
+                        <span>約合台幣</span>
+                        <span class="font-bold text-blue-300">TWD 2,750</span>
+                    </div>
+                </div>
+                <button class="w-full bg-blue-500 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-3 shadow-lg active:scale-95 transition-transform">
+                    <i class="fas fa-camera"></i> 掃描收據
+                </button>
+            </div>
+
+            <!-- Page 4: Notes -->
+            <div id="jarvis" class="page px-6 pt-4 pb-32">
+                <h2 class="text-xl font-bold mb-3 text-slate-800">Google 搜尋</h2>
+                <form onsubmit="handleSearch(event)" class="relative mb-4">
+                    <input id="searchInput" type="text" placeholder="搜尋景點、美食、交通..." 
+                        class="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3 pl-12 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none shadow-sm">
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-500 text-white px-4 py-1.5 rounded-xl text-xs font-bold">搜尋</button>
+                </form>
+
+                <h2 class="text-lg font-bold mb-3 text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-clipboard-list text-blue-500"></i> 備註事項
+                </h2>
+                <div class="bg-white border border-slate-200 rounded-2xl p-3 mb-4 flex gap-2">
+                    <input id="noteInput" type="text" placeholder="新增備註..." 
+                        class="flex-1 text-sm outline-none bg-transparent"
+                        onkeypress="if(event.key==='Enter')addNote()">
+                    <button onclick="addNote()" class="bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-bold">新增</button>
+                </div>
+                <div id="notesList" class="space-y-2 mb-6"></div>
+
+                <h2 class="text-lg font-bold mb-3 text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-suitcase text-green-500"></i> 行李檢查清單
+                </h2>
+                <div class="bg-white rounded-2xl p-4 shadow-sm mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-sm font-bold text-slate-700">完成度</span>
+                        <span id="packProgress" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full font-bold">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2 mb-4">
+                        <div id="progressBar" class="bg-blue-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    
+                    <!-- 文件類 -->
+                    <div class="mb-4">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">📄 文件</p>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="check-item w-5 h-5 rounded border-slate-300 text-blue-500" onchange="updateProgress()">
+                                <span class="text-sm text-slate-700">護照</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="check-item w-5 h-5 rounded border-slate-300 text-blue-500" onchange="updateProgress()">
+                                <span class="text-sm text-slate-700">JR Pass 兌換券</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="check-item w-5 h-5 rounded border-slate-300 text-blue-500" onchange="updateProgress()">
+                                <span class="text-sm text-slate-700">飯店預訂確認單</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="check-item w-5 h-5 rounded border-slate-300 text-blue-500" onchange="updateProgress()">
+                                <span class="text-sm text-slate-700">機票電子票</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- 電子產品 -->
+                    <div class="mb-4">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">🔌 電子產品</p>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="check-item w-5 h-5 rounded border-slate-300 text-blue-500" onchange="updateProgress()">
+                                <span class="text-sm text-slate-700">手機充電器</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="check-item w-5 h-5 rounded border-slate-300 text-blue-500" onchange="updateProgress()">
+                                <span class="text-sm text-slate-700">行動電源</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="check-item w-5 h-5 rounded border-slate-300 text-blue-500" onchange="updateProgress()">
+                                <span class="text-sm text-slate-700">萬國轉接頭</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="check-item w-5 h-5 rounded border-slate-300 text-blue-500" onchange="updateProgress()">
+                                <span class="text-sm text-slate-700">相機/記憶卡</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- 衣物 -->
+                    <div class="mb-4">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">👕 衣物</p>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="check-item w-5 h-5 rounded border-slate-300 text-blue-500" onchange="updateProgress()">
+                                <span class="text-sm text-slate-700">換洗衣物（5天份）</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="check-item w-5 h-5 rounded border-slate-300 text-blue-500" onchange="updateProgress()">
+                                <span class="text-sm text-slate-700">外套/薄長袖</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="check-item w-5 h-5 rounded border-slate-300 text-blue-500" onchange="updateProgress()">
+                                <span class="text-sm text-slate-700">舒適走路鞋</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="check-item w-5 h-5 rounded border-slate-300 text-blue-500" onchange="updateProgress()">
+                                <span class="text-sm text-slate-700">拖鞋/室內鞋</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- 藥品 -->
+                    <div class="mb-4">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">💊 藥品</p>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="check-item w-5 h-5 rounded border-slate-300 text-blue-500" onchange="updateProgress()">
+                                <span class="text-sm text-slate-700">感冒藥</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="check-item w-5 h-5 rounded border-slate-300 text-blue-500" onchange="updateProgress()">
+                                <span class="text-sm text-slate-700">腸胃藥</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="check-item w-5 h-5 rounded border-slate-300 text-blue-500" onchange="updateProgress()">
+                                <span class="text-sm text-slate-700">止痛藥</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="check-item w-5 h-5 rounded border-slate-300 text-blue-500" onchange="updateProgress()">
+                                <span class="text-sm text-slate-700">暈車藥</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- 其他 -->
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">🎒 其他</p>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="check-item w-5 h-5 rounded border-slate-300 text-blue-500" onchange="updateProgress()">
+                                <span class="text-sm text-slate-700">防曬乳</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="check-item w-5 h-5 rounded border-slate-300 text-blue-500" onchange="updateProgress()">
+                                <span class="text-sm text-slate-700">雨具（雨傘/雨衣）</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="check-item w-5 h-5 rounded border-slate-300 text-blue-500" onchange="updateProgress()">
+                                <span class="text-sm text-slate-700">水壺</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="check-item w-5 h-5 rounded border-slate-300 text-blue-500" onchange="updateProgress()">
+                                <span class="text-sm text-slate-700">零錢包</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="check-item w-5 h-5 rounded border-slate-300 text-blue-500" onchange="updateProgress()">
+                                <span class="text-sm text-slate-700">購物袋/環保袋</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="text-lg font-bold mb-3 text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-phone-alt text-red-500"></i> 緊急聯絡
+                </h2>
+                <div class="bg-red-50 border border-red-100 rounded-2xl p-4 mb-6">
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2">
+                            <span class="bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">警察</span>
+                            <span class="text-slate-700">110</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">救護車</span>
+                            <span class="text-slate-700">119</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="bg-blue-500 text-white px-2 py-1 rounded text-xs font-bold">台灣駐福岡辦事處</span>
+                            <span class="text-slate-700">+81-92-771-2122</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="h-20"></div>
+            </div>
+
+        </div>
+
+        <!-- Tab Bar -->
+        <div class="tab-bar h-20 bg-white border-t border-slate-100 flex items-center justify-around px-4 pb-4">
+            <button onclick="showPage('home', this)" class="nav-btn flex flex-col items-center gap-1 tab-active">
+                <i class="fas fa-home text-xl"></i>
+                <span class="text-[10px] font-bold">主頁</span>
+            </button>
+            <button onclick="showPage('itinerary', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-400">
+                <i class="fas fa-calendar-day text-xl"></i>
+                <span class="text-[10px] font-bold">行程</span>
+            </button>
+            <button onclick="showPage('accounting', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-400">
+                <i class="fas fa-wallet text-xl"></i>
+                <span class="text-[10px] font-bold">記帳</span>
+            </button>
+            <button onclick="showPage('jarvis', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-400">
+                <i class="fas fa-clipboard-list text-xl"></i>
+                <span class="text-[10px] font-bold">備註</span>
+            </button>
+        </div>
+
+        <!-- Home Indicator -->
+        <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-slate-200 rounded-full z-50"></div>
+    </div>
+
+    <script>
+        let isEditMode = false;
+
+        function showPage(pageId, btn) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
+            document.querySelectorAll('.nav-btn').forEach(b => {
+                b.classList.remove('tab-active');
+                b.classList.add('text-slate-400');
+            });
+            
+            document.getElementById(pageId).classList.add('page-active');
+            btn.classList.add('tab-active');
+            btn.classList.remove('text-slate-400');
+            document.getElementById('mainScroll').scrollTop = 0;
+        }
+
+        // 景點展開/收合功能
+        function toggleSpot(element) {
+            const card = element.closest('.spot-card');
+            const detail = card.querySelector('.spot-detail');
+            
+            // 關閉其他已展開的卡片
+            document.querySelectorAll('.spot-card.active').forEach(activeCard => {
+                if (activeCard !== card) {
+                    activeCard.classList.remove('active');
+                    activeCard.querySelector('.spot-detail').classList.add('hidden');
+                }
+            });
+            
+            // 切換當前卡片
+            card.classList.toggle('active');
+            detail.classList.toggle('hidden');
+        }
+
+        // Google 搜尋
+        function handleSearch(e) {
+            e.preventDefault();
+            const query = document.getElementById('searchInput').value;
+            if (query) {
+                window.open(`https://www.google.com/search?q=${encodeURIComponent(query + ' 九州 日本')}`, '_blank');
+            }
+        }
+
+        // 行李進度
+        function updateProgress() {
+            const total = document.querySelectorAll('.check-item').length;
+            const checked = document.querySelectorAll('.check-item:checked').length;
+            const percentage = total > 0 ? Math.round((checked / total) * 100) : 0;
+            
+            document.getElementById('packProgress').textContent = percentage + '%';
+            document.getElementById('progressBar').style.width = percentage + '%';
+        }
+
+        // 備註事項管理
+        let notes = JSON.parse(localStorage.getItem('kyushu_notes') || '[]');
+        
+        function renderNotes() {
+            const container = document.getElementById('notesList');
+            container.innerHTML = notes.map((note, index) => `
+                <div class="bg-white border border-slate-100 rounded-xl p-3 flex justify-between items-start gap-2">
+                    <span class="text-sm text-slate-700 flex-1">${note}</span>
+                    <button onclick="deleteNote(${index})" class="text-slate-400 hover:text-red-500 transition-colors">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+        
+        function addNote() {
+            const input = document.getElementById('noteInput');
+            const text = input.value.trim();
+            if (text) {
+                notes.push(text);
+                localStorage.setItem('kyushu_notes', JSON.stringify(notes));
+                input.value = '';
+                renderNotes();
+            }
+        }
+        
+        function deleteNote(index) {
+            notes.splice(index, 1);
+            localStorage.setItem('kyushu_notes', JSON.stringify(notes));
+            renderNotes();
+        }
+        
+        // 頁面載入時渲染備註
+        renderNotes();
+    </script>
+</body>
+</html>
