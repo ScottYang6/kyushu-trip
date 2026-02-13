@@ -1047,12 +1047,36 @@
 
         // 行李進度
         function updateProgress() {
-            const total = document.querySelectorAll('.check-item').length;
-            const checked = document.querySelectorAll('.check-item:checked').length;
-            const percentage = total > 0 ? Math.round((checked / total) * 100) : 0;
+            const checkboxes = document.querySelectorAll('.check-item');
+            const checked = document.querySelectorAll('.check-item:checked');
+            const percentage = checkboxes.length > 0 ? Math.round((checked.length / checkboxes.length) * 100) : 0;
             
             document.getElementById('packProgress').textContent = percentage + '%';
             document.getElementById('progressBar').style.width = percentage + '%';
+            
+            // 儲存勾選狀態到 localStorage
+            const checkedState = Array.from(checkboxes).map(cb => cb.checked);
+            localStorage.setItem('kyushu_checklist', JSON.stringify(checkedState));
+        }
+        
+        // 頁面載入時恢復行李檢查清單狀態
+        function loadChecklist() {
+            const saved = localStorage.getItem('kyushu_checklist');
+            if (saved) {
+                const checkedState = JSON.parse(saved);
+                const checkboxes = document.querySelectorAll('.check-item');
+                checkboxes.forEach((cb, index) => {
+                    if (checkedState[index] !== undefined) {
+                        cb.checked = checkedState[index];
+                    }
+                });
+                // 更新進度顯示
+                const total = checkboxes.length;
+                const checked = document.querySelectorAll('.check-item:checked').length;
+                const percentage = total > 0 ? Math.round((checked / total) * 100) : 0;
+                document.getElementById('packProgress').textContent = percentage + '%';
+                document.getElementById('progressBar').style.width = percentage + '%';
+            }
         }
 
         // 備註事項管理
@@ -1755,6 +1779,9 @@
         
         // 立即修復所有卡片（頁面載入時）
         fixAllSpotCards();
+        
+        // 頁面載入時恢復行李檢查清單
+        loadChecklist();
         
         // 頁面載入後初始化拖動
         setTimeout(initSortable, 100);
