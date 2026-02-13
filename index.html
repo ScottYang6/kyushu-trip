@@ -141,40 +141,8 @@
 
                 <div class="mb-8">
                     <h2 class="text-lg font-bold mb-4 text-slate-800">後續行程</h2>
-                    <div class="bg-slate-50 rounded-3xl p-5 space-y-6 relative overflow-hidden">
-                        <div class="absolute left-7 top-10 bottom-10 w-0.5 bg-blue-200"></div>
-                        
-                        <div class="flex items-start gap-4 relative z-10">
-                            <div class="w-3 h-3 bg-blue-500 rounded-full mt-1.5 ring-4 ring-white"></div>
-                            <div>
-                                <p class="text-sm font-bold text-slate-800">11:00 天神商圈</p>
-                                <p class="text-xs text-slate-500">購物、美食、地下街</p>
-                            </div>
-                        </div>
-
-                        <div class="flex items-start gap-4 relative z-10">
-                            <div class="w-3 h-3 bg-blue-500 rounded-full mt-1.5 ring-4 ring-white"></div>
-                            <div>
-                                <p class="text-sm font-bold text-slate-800">12:30 一蘭拉麵 總本店</p>
-                                <p class="text-xs text-slate-500">🍜 必吃！</p>
-                            </div>
-                        </div>
-
-                        <div class="flex items-start gap-4 relative z-10">
-                            <div class="w-3 h-3 bg-blue-500 rounded-full mt-1.5 ring-4 ring-white"></div>
-                            <div>
-                                <p class="text-sm font-bold text-slate-800">18:00 博多華味鳥</p>
-                                <p class="text-xs text-slate-500">🍲 九州水炊鍋名店</p>
-                            </div>
-                        </div>
-
-                        <div class="flex items-start gap-4 relative z-10">
-                            <div class="w-3 h-3 bg-green-500 rounded-full mt-1.5 ring-4 ring-white"></div>
-                            <div>
-                                <p class="text-sm font-bold text-slate-800">20:00 Check-in 索拉利亞西鐵酒店</p>
-                                <p class="text-xs text-slate-500">🏨 福岡市區住宿</p>
-                            </div>
-                        </div>
+                    <div id="upcomingSchedule" class="bg-slate-50 rounded-3xl p-5 space-y-4 relative overflow-hidden">
+                        <!-- 動態內容將由 JavaScript 生成 -->
                     </div>
                 </div>
             </div>
@@ -687,6 +655,34 @@
                     </div>
                 </div>
 
+                <!-- 匯率換算器 -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm mb-4">
+                    <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                        <i class="fas fa-exchange-alt text-green-500"></i> 匯率換算
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2">
+                            <div class="flex-1">
+                                <label class="text-xs text-slate-500 mb-1 block">日圓 JPY</label>
+                                <input id="jpyInput" type="number" placeholder="0" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" oninput="convertCurrency('jpy')">
+                            </div>
+                            <i class="fas fa-arrow-right text-slate-400 mt-5"></i>
+                            <div class="flex-1">
+                                <label class="text-xs text-slate-500 mb-1 block">台幣 TWD</label>
+                                <input id="twdInput" type="number" placeholder="0" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" oninput="convertCurrency('twd')">
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between bg-slate-50 rounded-xl p-3">
+                            <span class="text-xs text-slate-600">當前匯率</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-bold text-slate-800">1 JPY =</span>
+                                <input id="exchangeRate" type="number" value="0.22" step="0.01" class="w-16 border border-slate-200 rounded-lg px-2 py-1 text-sm text-center" onchange="updateExchangeRate()">
+                                <span class="text-sm font-bold text-slate-800">TWD</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 分類統計圖表 -->
                 <div class="bg-white rounded-2xl p-4 shadow-sm mb-4">
                     <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
@@ -1041,7 +1037,7 @@
             e.preventDefault();
             const query = document.getElementById('searchInput').value;
             if (query) {
-                window.open(`https://www.google.com/search?q=${encodeURIComponent(query + ' 九州 日本')}`, '_blank');
+                window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
             }
         }
 
@@ -1116,6 +1112,29 @@
 
         // ========== 記帳本功能 ==========
         let expenses = JSON.parse(localStorage.getItem('kyushu_expenses') || '[]');
+        let currentRate = 0.22; // 預設匯率 1 JPY = 0.22 TWD
+        
+        // 匯率換算功能
+        function convertCurrency(from) {
+            const jpyInput = document.getElementById('jpyInput');
+            const twdInput = document.getElementById('twdInput');
+            const rate = parseFloat(document.getElementById('exchangeRate').value) || 0.22;
+            
+            if (from === 'jpy') {
+                const jpy = parseFloat(jpyInput.value) || 0;
+                twdInput.value = (jpy * rate).toFixed(2);
+            } else {
+                const twd = parseFloat(twdInput.value) || 0;
+                jpyInput.value = (twd / rate).toFixed(0);
+            }
+        }
+        
+        function updateExchangeRate() {
+            const newRate = parseFloat(document.getElementById('exchangeRate').value) || 0.22;
+            currentRate = newRate;
+            // 重新換算
+            convertCurrency('jpy');
+        }
         
         const categoryNames = {
             food: '餐飲',
@@ -1626,7 +1645,7 @@
                 return;
             }
             
-            // 建立新景點卡片
+            // 建立新景點卡片（與預設卡片相同格式）
             const newCard = document.createElement('div');
             newCard.className = 'spot-card bg-white border border-slate-100 rounded-2xl shadow-sm mb-3 overflow-hidden';
             
@@ -1634,23 +1653,27 @@
             const mapcodeHtml = mapcode ? `<div class="mapcode-display">${mapcode}</div>` : '';
             
             newCard.innerHTML = `
-                <div class="p-4 cursor-pointer" onclick="toggleSpot(this)">
+                <div class="p-4">
                     <div class="flex justify-between items-start">
-                        <div class="flex-1">
+                        <div class="flex-1 cursor-pointer" onclick="toggleSpot(this.closest('.spot-card'))">
                             <p class="font-bold text-slate-800 text-lg">${name}</p>
                             ${mapcodeHtml}
                         </div>
-                        <div class="flex items-center">
-                            <i class="fas fa-chevron-down text-slate-400 transition-transform mt-1"></i>
-                            <button onclick="event.stopPropagation(); deleteSpot(this.closest('.spot-card'))" class="delete-btn hidden text-red-500 w-8 h-8 rounded-full bg-red-50 flex items-center justify-center ml-2">
+                        <div class="flex items-center gap-2">
+                            <button onclick="event.stopPropagation(); window.open('https://www.google.com/maps/search/' + encodeURIComponent('${name} 福岡'), '_blank')" class="nav-map-btn w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center">
+                                <i class="fas fa-map-location-dot"></i>
+                            </button>
+                            <button onclick="event.stopPropagation(); deleteSpot(this.closest('.spot-card'))" class="delete-btn hidden text-red-500 w-8 h-8 rounded-full bg-red-50 flex items-center justify-center">
                                 <i class="fas fa-trash"></i>
                             </button>
+                            <i class="fas fa-chevron-down text-slate-400 transition-transform cursor-pointer" onclick="toggleSpot(this.closest('.spot-card'))"></i>
                         </div>
                     </div>
                 </div>
                 <div class="spot-detail hidden px-4 pb-4 border-t border-slate-100 pt-3">
-                    <p class="text-sm text-slate-500 mb-2"><i class="fas fa-info-circle text-blue-500 mr-2"></i>點擊上方 Google Maps 按鈕導航</p>
-                    <button onclick="window.open('https://www.google.com/maps/search/${encodeURIComponent(name + ' 福岡')}', '_blank')" class="w-full bg-blue-500 text-white py-2 rounded-xl font-bold text-sm">
+                    <p class="text-sm text-slate-600 mb-2"><i class="fas fa-info-circle text-green-500 mr-2"></i>${name}</p>
+                    <p class="text-sm text-slate-600 mb-2"><i class="fas fa-map-marker-alt text-red-500 mr-2"></i>福岡縣</p>
+                    <button onclick="window.open('https://www.google.com/maps/search/' + encodeURIComponent('${name} 福岡'), '_blank')" class="w-full bg-blue-500 text-white py-2 rounded-xl font-bold text-sm">
                         <i class="fas fa-map-location-dot mr-2"></i>開啟 Google Maps
                     </button>
                 </div>
@@ -1663,6 +1686,8 @@
             if (isEditMode) {
                 const deleteBtn = newCard.querySelector('.delete-btn');
                 if (deleteBtn) deleteBtn.classList.remove('hidden');
+                const navBtn = newCard.querySelector('.nav-map-btn');
+                if (navBtn) navBtn.classList.add('hidden');
             }
             
             saveItinerary();
@@ -1780,8 +1805,74 @@
         // 立即修復所有卡片（頁面載入時）
         fixAllSpotCards();
         
-        // 頁面載入時恢復行李檢查清單
-        loadChecklist();
+        // 首頁後續行程數據
+        const dailySchedule = {
+            1: [
+                { time: '11:00', title: '天神商圈', desc: '購物、美食、地下街' },
+                { time: '12:30', title: '一蘭拉麵 總本店', desc: '🍜 必吃！' },
+                { time: '18:00', title: '博多華味鳥', desc: '🍲 九州水炊鍋名店' },
+                { time: '20:00', title: 'Check-in 索拉利亞西鐵酒店', desc: '🏨 福岡市區住宿', type: 'hotel' }
+            ],
+            2: [
+                { time: '09:00', title: '太宰府天滿宮', desc: '⛩️ 學問之神、表參道逛街' },
+                { time: '14:00', title: '前往由布院', desc: '🚃 搭乘由布院之森' },
+                { time: '16:00', title: '由布院散策', desc: '🚶 金麟湖、湯之坪街道' },
+                { time: '18:00', title: 'Check-in Yufuin Rakuyu', desc: '🏨 溫泉旅館一泊二食', type: 'hotel' }
+            ],
+            3: [
+                { time: '09:00', title: '九州非洲野生動物園', desc: '🦁 自駕遊園、餵食獅子' },
+                { time: '13:00', title: '日田市', desc: '🏘️ 豆田町老街散策' },
+                { time: '17:00', title: '博多運河城', desc: '🛍️ 購物、晚餐、鋼彈秀' },
+                { time: '20:00', title: '返回索拉利亞西鐵酒店', desc: '🏨 福岡市區住宿', type: 'hotel' }
+            ],
+            4: [
+                { time: '09:00', title: '門司港復古區', desc: '🏛️ 藍翼橋、懷舊建築' },
+                { time: '13:00', title: '九州鐵道歷史館', desc: '🚂 蒸氣火車、模擬駕駛' },
+                { time: '16:00', title: 'The Outlets Kitakyushu', desc: '🛍️ 品牌折扣店購物' },
+                { time: '20:00', title: '返回索拉利亞西鐵酒店', desc: '🏨 福岡市區住宿', type: 'hotel' }
+            ],
+            5: [
+                { time: '09:00', title: '海之中道海濱公園', desc: '🏖️ 沙濉、花海、單車遊園' },
+                { time: '13:00', title: '海洋世界海之中道', desc: '🐬 海豚秀、水族館' },
+                { time: '17:00', title: '天神商圈最後採購', desc: '🛍️ 藥妝、伴手禮' },
+                { time: '20:00', title: '返回索拉利亞西鐵酒店', desc: '🏨 福岡市區住宿', type: 'hotel' }
+            ],
+            6: [
+                { time: '10:00', title: '最後採購', desc: '🛍️ 天神地下街、補貨' },
+                { time: '14:00', title: '前往福岡機場', desc: '✈️ 建議提前2小時' },
+                { time: '16:00', title: '搭機返程', desc: '👋 再見九州！' }
+            ]
+        };
+
+        // 更新首頁後續行程（預設顯示第一天行程）
+        function updateUpcomingSchedule() {
+            const schedule = dailySchedule[1]; // 預設顯示 Day 1 行程
+            
+            let scheduleHTML = '<div class="absolute left-7 top-6 bottom-6 w-0.5 bg-blue-200"></div>';
+            
+            schedule.forEach((item, index) => {
+                const isHotel = item.type === 'hotel';
+                const dotColor = isHotel ? 'bg-green-500' : 'bg-blue-500';
+                
+                scheduleHTML += `
+                    <div class="flex items-start gap-4 relative z-10">
+                        <div class="w-3 h-3 ${dotColor} rounded-full mt-1.5 ring-4 ring-white"></div>
+                        <div>
+                            <p class="text-sm font-bold text-slate-800">${item.time} ${item.title}</p>
+                            <p class="text-xs text-slate-500">${item.desc}</p>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            const container = document.getElementById('upcomingSchedule');
+            if (container) {
+                container.innerHTML = scheduleHTML;
+            }
+        }
+
+        // 頁面載入時更新後續行程
+        updateUpcomingSchedule();
         
         // 頁面載入後初始化拖動
         setTimeout(initSortable, 100);
