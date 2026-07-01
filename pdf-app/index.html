@@ -907,14 +907,28 @@
       "旅行小物": ["雨具", "防曬", "零錢包", "購物袋", "水壺"]
     };
 
+    const cachedExchangeRate = JSON.parse(localStorage.getItem("fukuoka-exchange-rate") || "null");
+    const fallbackExchangeRate = 0.22;
+
     const state = {
       activeDay: 1,
       guideFilter: "全部",
       expenses: JSON.parse(localStorage.getItem("fukuoka-expenses") || "[]"),
-      checks: JSON.parse(localStorage.getItem("fukuoka-checks") || "{}")
+      checks: JSON.parse(localStorage.getItem("fukuoka-checks") || "{}"),
+      exchangeRate: Number(cachedExchangeRate?.rate) || fallbackExchangeRate,
+      exchangeRateUpdatedAt: cachedExchangeRate?.updatedAt || "",
+      exchangeRateStatus: cachedExchangeRate?.updatedAt ? "使用快取匯率" : "匯率載入中"
     };
 
     const yen = new Intl.NumberFormat("ja-JP", { style: "currency", currency: "JPY", maximumFractionDigits: 0 });
+    const twdFormatter = new Intl.NumberFormat("zh-TW", { style: "currency", currency: "TWD", maximumFractionDigits: 0 });
+    const rateFormatter = new Intl.NumberFormat("zh-TW", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+    const dateFormatter = new Intl.DateTimeFormat("zh-TW", {
+      month: "numeric",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
 
     function pageSrc(page) {
       return `assets/pages/preview-${page}.png`;
@@ -1012,10 +1026,12 @@
 
     function renderWallet() {
       const total = state.expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-      const twd = Math.round(total * 0.22);
+      const twd = Math.round(total * state.exchangeRate);
+      const updatedText = state.exchangeRateUpdatedAt ? `更新 ${dateFormatter.format(new Date(state.exchangeRateUpdatedAt))}` : "自動抓取中";
+      const rateText = `${state.exchangeRateStatus} 1 JPY = NT$ ${rateFormatter.format(state.exchangeRate)} · ${updatedText}`;
       document.getElementById("walletStats").innerHTML = `
         <div class="stat"><strong>${yen.format(total)}</strong><span>總花費</span></div>
-        <div class="stat"><strong>NT$ ${twd.toLocaleString("zh-TW")}</strong><span>約略台幣 0.22 換算</span></div>
+        <div class="stat"><strong>${twdFormatter.format(twd)}</strong><span>${rateText}</span></div>
         <div class="stat"><strong>${state.expenses.length}</strong><span>筆數</span></div>
         <div class="stat"><strong>${yen.format(state.expenses.length ? total / state.expenses.length : 0)}</strong><span>平均</span></div>`;
       document.getElementById("expenseList").innerHTML = state.expenses.length ? state.expenses.map((item, idx) => `
@@ -1026,6 +1042,32 @@
         </div>
       `).join("") : `<div class="empty">尚無支出記錄</div>`;
       localStorage.setItem("fukuoka-expenses", JSON.stringify(state.expenses));
+    }
+
+    async function fetchExchangeRate() {
+      state.exchangeRateStatus = "匯率更新中";
+      renderWallet();
+      try {
+        const response = await fetch("https://open.er-api.com/v6/latest/JPY", { cache: "no-store" });
+        if (!response.ok) throw new Error("exchange rate request failed");
+        const data = await response.json();
+        const rate = Number(data?.rates?.TWD);
+        if (data?.result !== "success" || !Number.isFinite(rate) || rate <= 0) {
+          throw new Error("exchange rate response invalid");
+        }
+        state.exchangeRate = rate;
+        state.exchangeRateUpdatedAt = data.time_last_update_unix
+          ? new Date(data.time_last_update_unix * 1000).toISOString()
+          : new Date().toISOString();
+        state.exchangeRateStatus = "即時匯率";
+        localStorage.setItem("fukuoka-exchange-rate", JSON.stringify({
+          rate: state.exchangeRate,
+          updatedAt: state.exchangeRateUpdatedAt
+        }));
+      } catch (error) {
+        state.exchangeRateStatus = state.exchangeRateUpdatedAt ? "使用快取匯率" : "匯率抓取失敗，使用備援";
+      }
+      renderWallet();
     }
 
     function renderChecklist() {
@@ -1138,6 +1180,7 @@
     renderTimeline();
     renderGuides();
     renderWallet();
+    fetchExchangeRate();
     renderChecklist();
     renderPdfGrid();
   </script>
