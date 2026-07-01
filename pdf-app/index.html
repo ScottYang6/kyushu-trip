@@ -1,0 +1,1145 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>福岡親子旅行 App</title>
+  <style>
+    :root {
+      --ink: #14213d;
+      --muted: #667085;
+      --line: #dde4ee;
+      --paper: #fffdf8;
+      --wash: #f4f8fb;
+      --blue: #0f82bd;
+      --teal: #008c89;
+      --coral: #e35b3f;
+      --gold: #d99b19;
+      --green: #26956b;
+      --navy: #16415e;
+      --shadow: 0 16px 42px rgba(20, 33, 61, .12);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: "Microsoft JhengHei", "PingFang TC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #eef5f7;
+      line-height: 1.55;
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .app {
+      min-height: 100vh;
+      padding-bottom: 90px;
+    }
+
+    .hero {
+      position: relative;
+      min-height: 310px;
+      display: grid;
+      align-content: end;
+      overflow: hidden;
+      color: white;
+      background: #0a597f url("assets/pages/preview-1.png") center / cover no-repeat;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(8, 39, 57, .08), rgba(8, 39, 57, .72));
+    }
+
+    .hero-inner {
+      position: relative;
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 42px 0 28px;
+    }
+
+    .kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border: 1px solid rgba(255,255,255,.55);
+      background: rgba(255,255,255,.18);
+      color: white;
+      font-weight: 800;
+      letter-spacing: 0;
+      border-radius: 999px;
+      backdrop-filter: blur(8px);
+    }
+
+    h1 {
+      margin: 14px 0 8px;
+      font-size: clamp(2rem, 6vw, 4.4rem);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 720px;
+      color: rgba(255,255,255,.92);
+      font-size: 1.04rem;
+      font-weight: 600;
+    }
+
+    .wrap {
+      width: min(1120px, calc(100% - 28px));
+      margin: 0 auto;
+    }
+
+    .top-dashboard {
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 16px;
+      margin-top: -24px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .panel, .card, .guide-card, .day-card, .expense-form, .pdf-tile, .check-group {
+      background: rgba(255,255,255,.95);
+      border: 1px solid rgba(221,228,238,.94);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .panel {
+      padding: 18px;
+    }
+
+    .section {
+      margin: 22px 0;
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      margin: 0 0 12px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: 1.28rem;
+      letter-spacing: 0;
+    }
+
+    .pill-row, .tab-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pill, .tab {
+      min-height: 38px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: white;
+      color: var(--ink);
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .pill.active, .tab.active {
+      background: var(--navy);
+      color: white;
+      border-color: var(--navy);
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .stat {
+      border-left: 4px solid var(--blue);
+      background: var(--wash);
+      padding: 12px;
+      border-radius: var(--radius);
+      min-height: 78px;
+    }
+
+    .stat:nth-child(2) { border-color: var(--coral); }
+    .stat:nth-child(3) { border-color: var(--gold); }
+    .stat:nth-child(4) { border-color: var(--green); }
+
+    .stat strong {
+      display: block;
+      font-size: 1.2rem;
+      line-height: 1.2;
+    }
+
+    .stat span, .small {
+      color: var(--muted);
+      font-size: .88rem;
+    }
+
+    .next-card {
+      display: grid;
+      grid-template-columns: 132px 1fr;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .next-card img {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+    }
+
+    .next-card h3, .day-card h3, .guide-card h3 {
+      margin: 0 0 6px;
+      font-size: 1.05rem;
+      line-height: 1.25;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #e6f5fa;
+      color: #075f86;
+      font-weight: 800;
+      font-size: .78rem;
+    }
+
+    .page {
+      display: none;
+      animation: fade .18s ease-out;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    @keyframes fade {
+      from { opacity: .4; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .day-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .day-card {
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .day-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 5px;
+      background: var(--blue);
+    }
+
+    .day-card:nth-child(2n)::before { background: var(--coral); }
+    .day-card:nth-child(3n)::before { background: var(--teal); }
+
+    .timeline {
+      display: grid;
+      gap: 12px;
+    }
+
+    .stop {
+      display: grid;
+      grid-template-columns: 74px 1fr auto;
+      gap: 12px;
+      align-items: start;
+      padding: 14px;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    .time {
+      color: var(--blue);
+      font-weight: 900;
+    }
+
+    .stop h3 {
+      margin: 0 0 3px;
+      font-size: 1.04rem;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: .86rem;
+    }
+
+    .icon-btn, .primary-btn, .quiet-btn, .danger-btn {
+      min-height: 38px;
+      border-radius: var(--radius);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 8px 11px;
+      font-weight: 900;
+    }
+
+    .icon-btn {
+      width: 40px;
+      padding: 0;
+      background: #e9f2f6;
+      color: var(--navy);
+    }
+
+    .primary-btn {
+      background: var(--blue);
+      color: white;
+    }
+
+    .quiet-btn {
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--ink);
+    }
+
+    .danger-btn {
+      background: #fff1ee;
+      color: #b93522;
+    }
+
+    .guide-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .guide-card {
+      display: grid;
+      grid-template-columns: 1fr 180px;
+      gap: 14px;
+      padding: 14px;
+      box-shadow: none;
+    }
+
+    .guide-card img {
+      width: 100%;
+      height: 132px;
+      border-radius: var(--radius);
+      object-fit: cover;
+      border: 1px solid var(--line);
+    }
+
+    .guide-card ul {
+      margin: 8px 0 0;
+      padding-left: 18px;
+    }
+
+    .guide-card li {
+      margin: 3px 0;
+    }
+
+    .guide-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .wallet-grid {
+      display: grid;
+      grid-template-columns: .9fr 1.1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .expense-form {
+      padding: 16px;
+      box-shadow: none;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: .84rem;
+      font-weight: 800;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: white;
+      color: var(--ink);
+      padding: 9px 10px;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 96px;
+    }
+
+    .expense-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .expense-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: white;
+    }
+
+    .check-layout {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .check-group {
+      padding: 15px;
+      box-shadow: none;
+    }
+
+    .check-group h3 {
+      margin: 0 0 10px;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 34px;
+      color: var(--ink);
+    }
+
+    .check-item input {
+      width: 18px;
+      min-height: 18px;
+      accent-color: var(--teal);
+    }
+
+    .note-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .pdf-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .pdf-tile {
+      padding: 9px;
+      box-shadow: none;
+      text-align: left;
+      background: white;
+    }
+
+    .pdf-tile img {
+      width: 100%;
+      aspect-ratio: 1.42 / 1;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      display: block;
+      background: #f6f8fb;
+    }
+
+    .pdf-tile strong {
+      display: block;
+      margin-top: 7px;
+      line-height: 1.25;
+      min-height: 32px;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 50%;
+      bottom: 14px;
+      z-index: 10;
+      width: min(720px, calc(100% - 24px));
+      transform: translateX(-50%);
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+      padding: 8px;
+      background: rgba(255,255,255,.95);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 14px 36px rgba(20, 33, 61, .22);
+      backdrop-filter: blur(10px);
+    }
+
+    .nav-btn {
+      min-height: 48px;
+      border-radius: 12px;
+      background: transparent;
+      color: var(--muted);
+      font-size: .76rem;
+      font-weight: 900;
+      display: grid;
+      place-items: center;
+      gap: 2px;
+    }
+
+    .nav-btn span:first-child {
+      font-size: 1.05rem;
+      line-height: 1;
+    }
+
+    .nav-btn.active {
+      background: #e8f4f8;
+      color: var(--blue);
+    }
+
+    dialog {
+      width: min(980px, calc(100% - 24px));
+      border: 0;
+      padding: 0;
+      border-radius: var(--radius);
+      box-shadow: 0 22px 80px rgba(0,0,0,.35);
+      background: white;
+    }
+
+    dialog::backdrop {
+      background: rgba(7, 23, 36, .65);
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .modal-head h3 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .modal-img {
+      width: 100%;
+      display: block;
+      background: #f6f8fb;
+    }
+
+    .empty {
+      padding: 18px;
+      color: var(--muted);
+      text-align: center;
+      border: 1px dashed var(--line);
+      border-radius: var(--radius);
+      background: white;
+    }
+
+    @media (max-width: 880px) {
+      .top-dashboard, .wallet-grid, .note-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .day-grid, .guide-grid, .pdf-grid, .check-layout {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .guide-card {
+        grid-template-columns: 1fr;
+      }
+
+      .guide-card img {
+        height: 170px;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .hero {
+        min-height: 330px;
+      }
+
+      .hero-inner, .wrap {
+        width: min(100% - 20px, 1120px);
+      }
+
+      .top-dashboard {
+        margin-top: -18px;
+      }
+
+      .status-grid, .day-grid, .guide-grid, .pdf-grid, .check-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .next-card {
+        grid-template-columns: 96px 1fr;
+      }
+
+      .stop {
+        grid-template-columns: 58px 1fr;
+      }
+
+      .stop .primary-btn {
+        grid-column: 1 / -1;
+      }
+
+      .bottom-nav {
+        bottom: 8px;
+        width: calc(100% - 12px);
+        border-radius: 14px;
+      }
+
+      .nav-btn {
+        min-height: 46px;
+        font-size: .68rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="hero">
+      <div class="hero-inner">
+        <div class="kicker">FUK 2025/07/27 - 08/01</div>
+        <h1>福岡親子旅行</h1>
+        <p>把 PDF 行程表整理成可以切換每日行程、攻略頁、記帳、備忘與原始頁面的旅行助理。</p>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section class="top-dashboard">
+        <div class="panel">
+          <div class="section-title">
+            <h2>即將前往</h2>
+            <span class="tag" id="nextTag">Day 1</span>
+          </div>
+          <div class="next-card" id="nextCard"></div>
+        </div>
+        <div class="panel">
+          <div class="section-title">
+            <h2>旅程總覽</h2>
+          </div>
+          <div class="status-grid">
+            <div class="stat"><strong>6 天</strong><span>福岡、由布院、北九州</span></div>
+            <div class="stat"><strong>21 頁</strong><span>PDF 攻略已整理</span></div>
+            <div class="stat"><strong>2 間</strong><span>飯店與溫泉旅館</span></div>
+            <div class="stat"><strong>親子</strong><span>博物館、動物園、水族館</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page active" id="home">
+        <div class="section">
+          <div class="section-title">
+            <h2>每日摘要</h2>
+          </div>
+          <div class="day-grid" id="dayGrid"></div>
+        </div>
+        <div class="section">
+          <div class="section-title">
+            <h2>快速重點</h2>
+          </div>
+          <div class="guide-grid" id="homeHighlights"></div>
+        </div>
+      </section>
+
+      <section class="page" id="itinerary">
+        <div class="section">
+          <div class="section-title">
+            <h2>詳細行程</h2>
+          </div>
+          <div class="tab-row" id="dayTabs"></div>
+        </div>
+        <div class="section timeline" id="timeline"></div>
+      </section>
+
+      <section class="page" id="guides">
+        <div class="section">
+          <div class="section-title">
+            <h2>景點攻略</h2>
+          </div>
+          <div class="pill-row" id="guideFilters"></div>
+        </div>
+        <div class="section guide-grid" id="guideGrid"></div>
+      </section>
+
+      <section class="page" id="wallet">
+        <div class="section">
+          <div class="section-title">
+            <h2>記帳本</h2>
+            <button class="quiet-btn" id="clearExpenses" type="button">清空</button>
+          </div>
+          <div class="status-grid" id="walletStats"></div>
+        </div>
+        <div class="wallet-grid">
+          <form class="expense-form" id="expenseForm">
+            <div class="field">
+              <label for="expenseName">項目</label>
+              <input id="expenseName" required placeholder="例如 一蘭拉麵" />
+            </div>
+            <div class="field">
+              <label for="expenseAmount">日圓金額</label>
+              <input id="expenseAmount" type="number" min="0" step="1" required placeholder="2500" />
+            </div>
+            <div class="field">
+              <label for="expenseCategory">分類</label>
+              <select id="expenseCategory">
+                <option>餐飲</option>
+                <option>交通</option>
+                <option>住宿</option>
+                <option>門票</option>
+                <option>購物</option>
+                <option>其他</option>
+              </select>
+            </div>
+            <button class="primary-btn" type="submit">新增支出</button>
+          </form>
+          <div class="panel">
+            <div class="section-title">
+              <h2>支出明細</h2>
+            </div>
+            <div class="expense-list" id="expenseList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="notes">
+        <div class="section note-grid">
+          <div class="panel">
+            <div class="section-title">
+              <h2>備註</h2>
+              <button class="quiet-btn" id="saveNote" type="button">儲存</button>
+            </div>
+            <textarea id="noteText" placeholder="臨時想補充的資訊、餐廳候補、伴手禮清單..."></textarea>
+          </div>
+          <div class="panel">
+            <div class="section-title">
+              <h2>緊急聯絡</h2>
+            </div>
+            <div class="timeline">
+              <div class="stop"><div class="time">110</div><div><h3>日本警察</h3><p class="small">遇到事故、遺失、緊急狀況</p></div></div>
+              <div class="stop"><div class="time">119</div><div><h3>消防與救護</h3><p class="small">火警、急救、救護車</p></div></div>
+              <div class="stop"><div class="time">092</div><div><h3>福岡索拉利亞西鐵飯店</h3><p class="small">092-761-6500</p></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">
+            <h2>行李檢查清單</h2>
+            <span class="tag" id="checkProgress">0%</span>
+          </div>
+          <div class="check-layout" id="checklist"></div>
+        </div>
+      </section>
+
+      <section class="page" id="pdf">
+        <div class="section">
+          <div class="section-title">
+            <h2>原始 PDF 頁面</h2>
+            <span class="small">點頁面可放大查看</span>
+          </div>
+          <div class="pdf-grid" id="pdfGrid"></div>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="主要導覽">
+      <button class="nav-btn active" data-page="home" type="button"><span>⌂</span><span>主頁</span></button>
+      <button class="nav-btn" data-page="itinerary" type="button"><span>◎</span><span>行程</span></button>
+      <button class="nav-btn" data-page="guides" type="button"><span>▦</span><span>攻略</span></button>
+      <button class="nav-btn" data-page="pdf" type="button"><span>▣</span><span>PDF</span></button>
+      <button class="nav-btn" data-page="wallet" type="button"><span>¥</span><span>記帳</span></button>
+      <button class="nav-btn" data-page="notes" type="button"><span>✓</span><span>備註</span></button>
+    </nav>
+  </div>
+
+  <dialog id="pageDialog">
+    <div class="modal-head">
+      <h3 id="modalTitle">PDF 頁面</h3>
+      <button class="icon-btn" id="closeDialog" type="button" aria-label="關閉">×</button>
+    </div>
+    <img class="modal-img" id="modalImage" src="assets/pages/preview-1.png" alt="PDF 第 1 頁 封面" />
+  </dialog>
+
+  <script>
+    const pageTitles = [
+      "封面",
+      "六日總行程",
+      "福岡機場計程車攻略",
+      "福岡住宿",
+      "索拉利亞飯店指南",
+      "麵包超人博物館",
+      "水炊料理 博多華味鳥",
+      "一蘭本社總本店",
+      "博多拉麵 Shin Shin",
+      "太宰府天滿宮",
+      "由布院散策地圖",
+      "湯布院 樂涌",
+      "九州自然動物園",
+      "索拉利亞停車資訊",
+      "博多運河城",
+      "門司港懷舊區",
+      "九州鐵道紀念館",
+      "咖哩本舖 門司港",
+      "MILKHALL 門司港",
+      "The Outlets Kitakyushu",
+      "海洋世界海之中道"
+    ];
+
+    const days = [
+      {
+        id: 1, date: "7/27（一）", title: "抵達福岡與市區親子景點", stay: "福岡索拉利亞西鐵飯店",
+        summary: "BR106 抵達、飯店、麵包超人博物館、晚餐候選。",
+        stops: [
+          { time: "04:15", name: "機場接送", note: "現金 2800，前往第二航廈。", type: "交通" },
+          { time: "08:00", name: "長榮航空 BR106", note: "08:00-11:20，台灣與日本時差 1 小時。", type: "航班", query: "福岡機場" },
+          { time: "12:30", name: "福岡索拉利亞西鐵飯店", note: "入住日期 7/27；Check-in 15:00；天神商圈交通方便。", mapcode: "13 318 244*20", query: "Solaria Nishitetsu Hotel Fukuoka" },
+          { time: "下午", name: "福岡麵包超人兒童博物館", note: "地鐵中洲川端站 6 號出口步行約 3 分鐘；營業 10:00-17:00。", query: "Fukuoka Anpanman Children's Museum" },
+          { time: "晚餐", name: "博多華味鳥 / 一蘭 / Shin Shin", note: "依排隊狀況選擇，華味鳥建議先訂位。", type: "餐飲" }
+        ]
+      },
+      {
+        id: 2, date: "7/28（二）", title: "取車、太宰府、由布院", stay: "湯布院 樂涌",
+        summary: "取車後前往太宰府天滿宮，再到由布院與金麟湖。",
+        stops: [
+          { time: "早上", name: "取車", note: "自駕日開始，先確認兒童座椅、ETC、油種與導航。", type: "交通" },
+          { time: "上午", name: "太宰府天滿宮", note: "家庭推薦看點：撫牛頭、太鼓橋、心字池餵魚；停車中心 Map Code 55 364 129*05。", mapcode: "55 364 129*05", query: "太宰府天滿宮" },
+          { time: "下午", name: "由布院與金麟湖", note: "湯之坪街道散策，金賞可樂餅、鞠智、Snoopy 茶屋、B-speak 蛋糕捲。", query: "由布院 金麟湖" },
+          { time: "15:00", name: "湯布院 樂涌", note: "Check-in 15:00 後；旅館地址 大分縣由布市湯布院町川上1272-88。", mapcode: "269 084 426*40", query: "Yufuin Rakuyu" }
+        ]
+      },
+      {
+        id: 3, date: "7/29（三）", title: "九州自然動物園與回福岡", stay: "福岡索拉利亞西鐵飯店",
+        summary: "九州自然動物園、Jungle Bus，晚上回博多/天神。",
+        stops: [
+          { time: "早餐", name: "飯店早餐", note: "溫泉旅館早餐後退房。", type: "餐飲" },
+          { time: "09:30", name: "九州自然動物園", note: "09:00-16:30；自駕導航 Map Code 46 634 565；Jungle Bus 需到園內綜合案內所購票。", mapcode: "46 634 565", query: "九州自然動物園" },
+          { time: "下午", name: "返回福岡", note: "視車程與孩子體力調整，可回飯店休息。", type: "交通" },
+          { time: "晚上", name: "福岡索拉利亞西鐵飯店", note: "第二段福岡住宿開始。", query: "Solaria Nishitetsu Hotel Fukuoka" }
+        ]
+      },
+      {
+        id: 4, date: "7/30（四）", title: "博多運河城與門司港", stay: "福岡索拉利亞西鐵飯店",
+        summary: "博多運河城、門司港懷舊區、九州鐵道紀念館與燒咖哩。",
+        stops: [
+          { time: "上午", name: "博多運河城", note: "店鋪 10:00-21:00；B1F 運河水舞秀，親子友善設施完整。", mapcode: "13 319 347*77", query: "Canal City Hakata" },
+          { time: "午後", name: "門司港懷舊區", note: "藍翼門司開合橋、香蕉人、展望室；建議西海岸停車場。", mapcode: "16 715 050*74", query: "門司港懷舊區" },
+          { time: "午後", name: "九州鐵道紀念館", note: "成人 300 日圓；9:00-17:00，週三休；戶外展示與迷你火車適合孩子。", mapcode: "16 715 027*55", query: "九州鐵道紀念館" },
+          { time: "晚餐", name: "咖哩本舖 門司港レトロ店", note: "11:00-20:00；推薦經典燒咖哩與兒童友善座位。", mapcode: "16 715 018*63", query: "Curry Honpo Mojiko Retro" }
+        ]
+      },
+      {
+        id: 5, date: "7/31（五）", title: "北九州 Outlet 或海洋世界", stay: "福岡索拉利亞西鐵飯店",
+        summary: "購物、美食、親子遊戲區；或安排海洋世界海之中道。",
+        stops: [
+          { time: "上午", name: "The Outlets Kitakyushu", note: "商店 10:00-20:00；Food Forest、ASOBLE 室內遊樂區；免費停車 4,500 台。", mapcode: "16 427 319*34", query: "The Outlets Kitakyushu" },
+          { time: "下午", name: "海洋世界海之中道", note: "09:30-17:30；海豚秀、水族館與親子餐廳，建議提早 20-30 分鐘入館。", mapcode: "13 553 836*75", query: "Marine World Uminonakamichi" },
+          { time: "晚上", name: "還車準備", note: "確認油量、收據、ETC、租車返還時間。", type: "交通" }
+        ]
+      },
+      {
+        id: 6, date: "8/01（六）", title: "返程", stay: "台中 Home",
+        summary: "飯店早餐、還車、BR105 回台中。",
+        stops: [
+          { time: "早餐", name: "飯店早餐", note: "整理行李並檢查護照、購買品、兒童用品。", type: "準備" },
+          { time: "上午", name: "還車", note: "保留緩衝時間，確認車內沒有遺留物。", type: "交通" },
+          { time: "12:20", name: "長榮航空 BR105", note: "12:20-13:45，返台。", query: "福岡機場 國際線" }
+        ]
+      }
+    ];
+
+    const guides = [
+      { title: "福岡機場計程車攻略", category: "交通", page: 3, bullets: ["穿過航廈後往國內線出口方向直走", "A3 出口左轉即可看到計程車區", "3 號普通、4 號高級、2 號大型、12 號 Uber/預約車"] },
+      { title: "福岡索拉利亞西鐵飯店", category: "住宿", page: 4, bullets: ["Check-in 15:00，入住 7/27 至 8/1", "地址 福岡市中央區天神2-2-43", "飯店直達 6 樓大廳，天神商圈購物方便"] },
+      { title: "福岡麵包超人兒童博物館", category: "親子", page: 6, bullets: ["地鐵中洲川端站 6 號出口步行約 3 分鐘", "營業 10:00-17:00，最後入場 16:00", "表演時間 10:30、13:30、15:30"] },
+      { title: "水炊料理 博多華味鳥", category: "餐飲", page: 7, bullets: ["17:00-00:00，建議提前訂位", "推薦華宴會套餐水炊鍋", "往中洲川端站 2 號出口步行約 5 分鐘"] },
+      { title: "一蘭本社總本店", category: "餐飲", page: 8, bullets: ["24 小時營業", "推薦天然豚骨湯拉麵、半熟蛋", "地鐵中洲川端站 3 號出口步行約 1 分鐘"] },
+      { title: "太宰府天滿宮", category: "景點", page: 10, bullets: ["自駕從福岡都市高速接九州自動車道", "太宰府駐車中心 Map Code 55 364 129*05", "梅枝餅、太鼓橋、心字池與遊樂園適合親子"] },
+      { title: "湯布院 樂涌", category: "住宿", page: 12, bullets: ["地址 由布市湯布院町川上1272-88", "Check-in 15:00 後，Check-out 10:00 前", "免費接送與預約專車，可往返車站/金麟湖"] },
+      { title: "九州自然動物園", category: "親子", page: 13, bullets: ["09:00-16:30", "入園高中以上 2,600 日圓，Jungle Bus 1,500 日圓/人", "自駕導航 Map Code 46 634 565"] },
+      { title: "博多運河城", category: "購物", page: 15, bullets: ["店鋪 10:00-21:00，餐廳 11:00-23:00", "館內停車 200 日圓/30 分鐘", "B1F 運河水舞秀與親子友善設施"] },
+      { title: "門司港懷舊區", category: "景點", page: 16, bullets: ["Map Code 16 715 050*74", "藍翼門司開合橋與門司港展望室", "MILKHALL、燒咖哩是用餐候選"] },
+      { title: "九州鐵道紀念館", category: "親子", page: 17, bullets: ["本館 Map Code 16 715 027*55", "成人票 300 日圓", "迷你火車、戶外展示與室內模型適合小孩"] },
+      { title: "The Outlets Kitakyushu", category: "購物", page: 20, bullets: ["營業 10:00-20:00，Food Forest 10:00-21:00", "4,500 台免費停車位", "ASOBLE 室內大型遊樂區"] },
+      { title: "海洋世界海之中道", category: "親子", page: 21, bullets: ["地址 福岡市東區西戶崎18-28", "09:30-17:30", "海豚秀、親子餐廳、嬰幼兒友善設施"] }
+    ];
+
+    const checklistData = {
+      "文件": ["護照", "機票電子檔", "飯店預訂確認", "租車資料", "旅遊保險"],
+      "親子用品": ["濕紙巾", "兒童餐具", "替換衣物", "推車雨罩", "常備藥"],
+      "電子產品": ["手機充電器", "行動電源", "轉接頭", "相機/記憶卡"],
+      "旅行小物": ["雨具", "防曬", "零錢包", "購物袋", "水壺"]
+    };
+
+    const state = {
+      activeDay: 1,
+      guideFilter: "全部",
+      expenses: JSON.parse(localStorage.getItem("fukuoka-expenses") || "[]"),
+      checks: JSON.parse(localStorage.getItem("fukuoka-checks") || "{}")
+    };
+
+    const yen = new Intl.NumberFormat("ja-JP", { style: "currency", currency: "JPY", maximumFractionDigits: 0 });
+
+    function pageSrc(page) {
+      return `assets/pages/preview-${page}.png`;
+    }
+
+    function mapUrl(query) {
+      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+    }
+
+    function renderNext() {
+      const first = days[0];
+      const stop = first.stops[1];
+      document.getElementById("nextTag").textContent = `${first.date} 出發`;
+      document.getElementById("nextCard").innerHTML = `
+        <img src="${pageSrc(3)}" alt="福岡機場計程車攻略">
+        <div>
+          <h3>${stop.name}</h3>
+          <p class="small">${stop.note}</p>
+          <div class="guide-actions">
+            <a class="primary-btn" href="${mapUrl("福岡機場")}" target="_blank" rel="noreferrer">開啟地圖</a>
+            <button class="quiet-btn" type="button" data-open-page="3">機場攻略</button>
+          </div>
+        </div>`;
+    }
+
+    function renderHome() {
+      document.getElementById("dayGrid").innerHTML = days.map(day => `
+        <article class="day-card">
+          <span class="tag">Day ${day.id} ${day.date}</span>
+          <h3>${day.title}</h3>
+          <p class="small">${day.summary}</p>
+          <div class="meta"><span>住宿：${day.stay}</span></div>
+        </article>`).join("");
+
+      const highlights = guides.filter(g => [3, 4, 10, 21].includes(g.page));
+      document.getElementById("homeHighlights").innerHTML = highlights.map(guideCard).join("");
+    }
+
+    function renderDayTabs() {
+      document.getElementById("dayTabs").innerHTML = days.map(day => `
+        <button class="tab ${state.activeDay === day.id ? "active" : ""}" data-day="${day.id}" type="button">Day ${day.id}</button>
+      `).join("");
+    }
+
+    function renderTimeline() {
+      const day = days.find(d => d.id === state.activeDay);
+      document.getElementById("timeline").innerHTML = `
+        <div class="panel">
+          <div class="section-title">
+            <h2>Day ${day.id} - ${day.date} ${day.title}</h2>
+            <span class="tag">${day.stay}</span>
+          </div>
+          <p class="small">${day.summary}</p>
+        </div>
+        ${day.stops.map(stop => `
+          <article class="stop">
+            <div class="time">${stop.time}</div>
+            <div>
+              <h3>${stop.name}</h3>
+              <p class="small">${stop.note}</p>
+              <div class="meta">
+                ${stop.mapcode ? `<span>Map Code ${stop.mapcode}</span>` : ""}
+                ${stop.type ? `<span>${stop.type}</span>` : ""}
+              </div>
+            </div>
+            ${stop.query ? `<a class="primary-btn" href="${mapUrl(stop.query)}" target="_blank" rel="noreferrer">地圖</a>` : ""}
+          </article>
+        `).join("")}`;
+    }
+
+    function guideCard(item) {
+      return `
+        <article class="guide-card" data-category="${item.category}">
+          <div>
+            <span class="tag">${item.category}</span>
+            <h3>${item.title}</h3>
+            <ul>${item.bullets.map(b => `<li>${b}</li>`).join("")}</ul>
+            <div class="guide-actions">
+              <button class="quiet-btn" type="button" data-open-page="${item.page}">查看原頁</button>
+              <a class="primary-btn" href="${mapUrl(item.title.replace(/Guide|指南/g, ""))}" target="_blank" rel="noreferrer">地圖搜尋</a>
+            </div>
+          </div>
+          <img src="${pageSrc(item.page)}" alt="${item.title}">
+        </article>`;
+    }
+
+    function renderGuides() {
+      const cats = ["全部", ...Array.from(new Set(guides.map(g => g.category)))];
+      document.getElementById("guideFilters").innerHTML = cats.map(cat => `
+        <button class="pill ${state.guideFilter === cat ? "active" : ""}" data-filter="${cat}" type="button">${cat}</button>
+      `).join("");
+      const items = state.guideFilter === "全部" ? guides : guides.filter(g => g.category === state.guideFilter);
+      document.getElementById("guideGrid").innerHTML = items.map(guideCard).join("");
+    }
+
+    function renderWallet() {
+      const total = state.expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+      const twd = Math.round(total * 0.22);
+      document.getElementById("walletStats").innerHTML = `
+        <div class="stat"><strong>${yen.format(total)}</strong><span>總花費</span></div>
+        <div class="stat"><strong>NT$ ${twd.toLocaleString("zh-TW")}</strong><span>約略台幣 0.22 換算</span></div>
+        <div class="stat"><strong>${state.expenses.length}</strong><span>筆數</span></div>
+        <div class="stat"><strong>${yen.format(state.expenses.length ? total / state.expenses.length : 0)}</strong><span>平均</span></div>`;
+      document.getElementById("expenseList").innerHTML = state.expenses.length ? state.expenses.map((item, idx) => `
+        <div class="expense-row">
+          <div><strong>${item.name}</strong><div class="small">${item.category}</div></div>
+          <strong>${yen.format(item.amount)}</strong>
+          <button class="icon-btn" type="button" data-delete-expense="${idx}" aria-label="刪除">×</button>
+        </div>
+      `).join("") : `<div class="empty">尚無支出記錄</div>`;
+      localStorage.setItem("fukuoka-expenses", JSON.stringify(state.expenses));
+    }
+
+    function renderChecklist() {
+      document.getElementById("noteText").value = localStorage.getItem("fukuoka-note") || "";
+      document.getElementById("checklist").innerHTML = Object.entries(checklistData).map(([group, items]) => `
+        <div class="check-group">
+          <h3>${group}</h3>
+          ${items.map(item => {
+            const key = `${group}-${item}`;
+            return `<label class="check-item"><input type="checkbox" data-check="${key}" ${state.checks[key] ? "checked" : ""}>${item}</label>`;
+          }).join("")}
+        </div>
+      `).join("");
+      updateCheckProgress();
+    }
+
+    function updateCheckProgress() {
+      const all = Object.values(checklistData).flat().length;
+      const done = Object.values(state.checks).filter(Boolean).length;
+      document.getElementById("checkProgress").textContent = `${Math.round(done / all * 100)}%`;
+      localStorage.setItem("fukuoka-checks", JSON.stringify(state.checks));
+    }
+
+    function renderPdfGrid() {
+      document.getElementById("pdfGrid").innerHTML = pageTitles.map((title, i) => {
+        const page = i + 1;
+        return `<button class="pdf-tile" data-open-page="${page}" type="button">
+          <img src="${pageSrc(page)}" alt="PDF 第 ${page} 頁 ${title}">
+          <strong>${page}. ${title}</strong>
+        </button>`;
+      }).join("");
+    }
+
+    function openPdfPage(page) {
+      const dialog = document.getElementById("pageDialog");
+      document.getElementById("modalTitle").textContent = `第 ${page} 頁 - ${pageTitles[page - 1] || "PDF 頁面"}`;
+      const img = document.getElementById("modalImage");
+      img.src = pageSrc(page);
+      img.alt = document.getElementById("modalTitle").textContent;
+      dialog.showModal();
+    }
+
+    function switchPage(id) {
+      document.querySelectorAll(".page").forEach(page => page.classList.toggle("active", page.id === id));
+      document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.toggle("active", btn.dataset.page === id));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    document.addEventListener("click", event => {
+      const nav = event.target.closest("[data-page]");
+      if (nav) switchPage(nav.dataset.page);
+
+      const day = event.target.closest("[data-day]");
+      if (day) {
+        state.activeDay = Number(day.dataset.day);
+        renderDayTabs();
+        renderTimeline();
+      }
+
+      const filter = event.target.closest("[data-filter]");
+      if (filter) {
+        state.guideFilter = filter.dataset.filter;
+        renderGuides();
+      }
+
+      const open = event.target.closest("[data-open-page]");
+      if (open) openPdfPage(Number(open.dataset.openPage));
+
+      const del = event.target.closest("[data-delete-expense]");
+      if (del) {
+        state.expenses.splice(Number(del.dataset.deleteExpense), 1);
+        renderWallet();
+      }
+    });
+
+    document.getElementById("expenseForm").addEventListener("submit", event => {
+      event.preventDefault();
+      state.expenses.unshift({
+        name: document.getElementById("expenseName").value.trim(),
+        amount: Number(document.getElementById("expenseAmount").value),
+        category: document.getElementById("expenseCategory").value
+      });
+      event.target.reset();
+      renderWallet();
+    });
+
+    document.getElementById("clearExpenses").addEventListener("click", () => {
+      state.expenses = [];
+      renderWallet();
+    });
+
+    document.getElementById("saveNote").addEventListener("click", () => {
+      localStorage.setItem("fukuoka-note", document.getElementById("noteText").value);
+    });
+
+    document.getElementById("checklist").addEventListener("change", event => {
+      if (event.target.matches("[data-check]")) {
+        state.checks[event.target.dataset.check] = event.target.checked;
+        updateCheckProgress();
+      }
+    });
+
+    document.getElementById("closeDialog").addEventListener("click", () => {
+      document.getElementById("pageDialog").close();
+    });
+
+    renderNext();
+    renderHome();
+    renderDayTabs();
+    renderTimeline();
+    renderGuides();
+    renderWallet();
+    renderChecklist();
+    renderPdfGrid();
+  </script>
+</body>
+</html>
