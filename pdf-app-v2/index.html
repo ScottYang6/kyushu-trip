@@ -4,13 +4,15 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>2026 九州親子旅遊 App V2</title>
+  <meta name="application-name" content="九州親子旅遊" />
+  <meta name="description" content="2026 日本九州親子旅遊行程、攻略、記帳與 PDF 原頁。" />
   <meta name="theme-color" content="#0b84bd" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="九州親子旅遊" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.webmanifest?v=20260706-kyushu-v2" />
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=20260706-kyushu-v2" />
   <style>
     :root {
       --ink: #172033;
@@ -1160,7 +1162,7 @@
 
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
-        navigator.serviceWorker.register("service-worker.js").catch(() => {});
+        navigator.serviceWorker.register("service-worker.js?v=20260706-kyushu-v2", { updateViaCache: "none" }).catch(() => {});
       });
     }
   </script>
