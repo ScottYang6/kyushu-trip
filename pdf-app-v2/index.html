@@ -2,8 +2,15 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>2026 九州親子旅遊 App V2</title>
+  <meta name="theme-color" content="#0b84bd" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="九州親子旅遊" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
   <style>
     :root {
       --ink: #172033;
@@ -29,13 +36,17 @@
       background: #edf5f7;
       font-family: "Microsoft JhengHei", "PingFang TC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       line-height: 1.55;
+      -webkit-tap-highlight-color: transparent;
     }
 
     button, input, select, textarea { font: inherit; }
     button { border: 0; cursor: pointer; }
     a { color: inherit; text-decoration: none; }
 
-    .app { min-height: 100vh; padding-bottom: 92px; }
+    .app {
+      min-height: 100vh;
+      padding-bottom: calc(108px + env(safe-area-inset-bottom));
+    }
 
     .hero {
       min-height: 320px;
@@ -441,7 +452,7 @@
     .bottom-nav {
       position: fixed;
       left: 50%;
-      bottom: 14px;
+      bottom: calc(14px + env(safe-area-inset-bottom));
       z-index: 10;
       width: min(760px, calc(100% - 24px));
       transform: translateX(-50%);
@@ -457,7 +468,7 @@
     }
 
     .nav-btn {
-      min-height: 48px;
+      min-height: 54px;
       border-radius: 12px;
       background: transparent;
       color: var(--muted);
@@ -467,6 +478,7 @@
       place-items: center;
       gap: 2px;
       touch-action: manipulation;
+      user-select: none;
     }
 
     .nav-btn span:first-child { font-size: 1.05rem; line-height: 1; }
@@ -520,11 +532,11 @@
       .stop { grid-template-columns: 60px 1fr; }
       .stop .primary-btn { grid-column: 1 / -1; }
       .bottom-nav {
-        bottom: 8px;
+        bottom: calc(10px + env(safe-area-inset-bottom));
         width: calc(100% - 12px);
         border-radius: 14px;
       }
-      .nav-btn { min-height: 46px; font-size: .66rem; }
+      .nav-btn { min-height: 54px; font-size: .66rem; }
     }
   </style>
 </head>
@@ -1145,6 +1157,12 @@
     renderChecklist();
     renderPdfSourceTabs();
     renderPdfGrid();
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("service-worker.js").catch(() => {});
+      });
+    }
   </script>
 </body>
 </html>
