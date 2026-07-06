@@ -281,6 +281,33 @@
       font-weight: 900;
     }
 
+    .map-code {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      color: var(--ink);
+      font-size: .82rem;
+      font-weight: 800;
+    }
+
+    .map-code span {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .copy-code {
+      border: 1px solid rgba(23,32,51,.14);
+      background: rgba(255,255,255,.72);
+      color: var(--blue);
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: .76rem;
+      font-weight: 800;
+      min-height: 30px;
+    }
+
     .stop h3 {
       margin: 0 0 3px;
       font-size: 1.03rem;
@@ -723,9 +750,9 @@
         cover: "assets/guide/guide-07.png",
         stops: [
           { time: "04:00", name: "台中雙定點出發", note: "旅順路二段 284 號與南興一路 5 號，福斯九人座，安全座椅 2 張。", query: "桃園國際機場 第二航廈" },
-          { time: "08:00", name: "長榮 BR106", note: "飛往福岡機場。抵達後於 1 樓大門 3 號月台搭計程車。", query: "福岡機場 國際線" },
-          { time: "中午", name: "索拉利亞西鐵酒店 Check-in", note: "天神市區車程約 15 分鐘；飯店與天神地下街停車場共構。", query: "Solaria Nishitetsu Hotel Fukuoka" },
-          { time: "午後", name: "福岡麵包超人兒童博物館", note: "Hakata Riverain 5F；建議停留 2-3 小時，B2F 西松屋可順路採買。", query: "Fukuoka Anpanman Children's Museum" },
+          { time: "08:00", name: "長榮 BR106", note: "飛往福岡機場。抵達後於 1 樓大門 3 號月台搭計程車。", query: "福岡機場 國際線", mapCode: "13 354 096*47", mapCodeLabel: "福岡空港国際線ターミナル" },
+          { time: "中午", name: "索拉利亞西鐵酒店 Check-in", note: "天神市區車程約 15 分鐘；飯店與天神地下街停車場共構。", query: "Solaria Nishitetsu Hotel Fukuoka", mapCode: "13 318 244*70", mapCodeLabel: "ソラリア西鉄ホテル福岡" },
+          { time: "午後", name: "福岡麵包超人兒童博物館", note: "Hakata Riverain 5F；建議停留 2-3 小時，B2F 西松屋可順路採買。", query: "Fukuoka Anpanman Children's Museum", mapCode: "13 348 029*36", mapCodeLabel: "博多リバレイン 5F 參考" },
           { time: "17:30", name: "博多華味鳥中洲本店", note: "水炊鍋訂位晚餐，從麵包超人館步行約 250 公尺。", query: "博多華味鳥 中洲本店" },
           { time: "晚間", name: "天神地下街", note: "餐後搭 1 站回天神，可逛蘋果派、起司塔、鹽可頌等。", query: "天神地下街" }
         ]
@@ -737,8 +764,8 @@
         stops: [
           { time: "07:00", name: "Komeda's Coffee 天神長浜店", note: "飯店附近步行約 5 分鐘，親子友善沙發位。", query: "コメダ珈琲店 天神長浜店" },
           { time: "08:30", name: "Times 天神大名店取車", note: "預約號 W7796309；SA 級禁菸小轎車，含導航、ETC 車載器與 ETC 卡。", query: "Times 天神大名店" },
-          { time: "上午", name: "太宰府天滿宮", note: "車程約 40 分鐘；推薦太宰府駐車，計次 500 日圓且推車友善。", query: "太宰府天滿宮" },
-          { time: "午後", name: "由布院散策", note: "九州汽車歷史博物館、湯布院花卉村、金鱗湖、Snoopy 茶屋。", query: "由布院 金鱗湖" },
+          { time: "上午", name: "太宰府天滿宮", note: "車程約 40 分鐘；推薦太宰府駐車，計次 500 日圓且推車友善。", query: "太宰府天滿宮", mapCode: "55 333 861*11", mapCodeLabel: "太宰府駐車センター" },
+          { time: "午後", name: "由布院散策", note: "九州汽車歷史博物館、湯布院花卉村、金鱗湖、Snoopy 茶屋。", query: "由布院 金鱗湖", mapCode: "269 359 527*46", mapCodeLabel: "金鱗湖" },
           { time: "晚間", name: "湯布院 樂涌", note: "入住溫泉旅館，享用懷石料理晚餐。", query: "湯布院 樂涌" }
         ]
       },
@@ -748,9 +775,9 @@
         cover: "assets/guide/guide-18.png",
         stops: [
           { time: "08:30", name: "由布院退房出發", note: "自駕前往九州自然動物園，建議開園前 30 分鐘抵達。", query: "九州自然動物園" },
-          { time: "09:00", name: "九州自然動物園", note: "Safari Zone 可自駕或搭 Jungle Bus，Fureai Zone 可互動餵食小動物。", query: "九州自然動物園" },
+          { time: "09:00", name: "九州自然動物園", note: "Safari Zone 可自駕或搭 Jungle Bus，Fureai Zone 可互動餵食小動物。", query: "九州自然動物園", mapCode: "46 664 168*72", mapCodeLabel: "九州自然動物公園" },
           { time: "午餐", name: "別府/日田午餐候選", note: "地獄蒸工房鐵輪、豐後牛そむり、日田鰻魚飯千屋、想夫戀炒麵本店。", query: "地獄蒸工房鐵輪" },
-          { time: "傍晚", name: "博多運河城", note: "18:00 起整點水舞秀，19:00/21:00 鋼彈水舞秀；可逛 MUJI、GAP、North Face、松本清。", query: "Canal City Hakata" }
+          { time: "傍晚", name: "博多運河城", note: "18:00 起整點水舞秀，19:00/21:00 鋼彈水舞秀；可逛 MUJI、GAP、North Face、松本清。", query: "Canal City Hakata", mapCode: "13 319 256*41", mapCodeLabel: "キャナルシティ博多" }
         ]
       },
       {
@@ -759,10 +786,10 @@
         cover: "assets/guide/guide-21.png",
         stops: [
           { time: "07:00", name: "TULLY'S COFFEE 天神店", note: "早餐候選，主打熱狗堡與酪梨法式三明治。", query: "TULLY'S COFFEE 天神店" },
-          { time: "08:45", name: "自駕前往門司港", note: "車程約 1 小時 15 分鐘，停門司港懷舊公有平面大型停車場。", query: "門司港懷舊區" },
-          { time: "上午", name: "門司港懷舊區", note: "舊大阪商船、舊門司三井俱樂部、舊門司稅關、藍翼橋、展望室。", query: "門司港懷舊區" },
+          { time: "08:45", name: "自駕前往門司港", note: "車程約 1 小時 15 分鐘，停門司港懷舊公有平面大型停車場。", query: "門司港懷舊區", mapCode: "16 716 421*60", mapCodeLabel: "門司港レトロ駐車場" },
+          { time: "上午", name: "門司港懷舊區", note: "舊大阪商船、舊門司三井俱樂部、舊門司稅關、藍翼橋、展望室。", query: "門司港懷舊區", mapCode: "16 715 389*31", mapCodeLabel: "門司港レトロ展望室" },
           { time: "午餐", name: "門司港燒咖哩與布丁", note: "Princess Phi Phi、伽哩本舖、MILKHALL MOJIKO。", query: "伽哩本舖 門司港レトロ店" },
-          { time: "14:30", name: "The Outlets Kitakyushu", note: "營業 10:00-20:00，免費 4,500 台平面停車；服務中心可拿優惠券。", query: "The Outlets Kitakyushu" }
+          { time: "14:30", name: "The Outlets Kitakyushu", note: "營業 10:00-20:00，免費 4,500 台平面停車；服務中心可拿優惠券。", query: "The Outlets Kitakyushu", mapCode: "16 427 319*34", mapCodeLabel: "THE OUTLETS KITAKYUSHU" }
         ]
       },
       {
@@ -770,9 +797,9 @@
         summary: "09:00 往海洋世界與海之中道海濱公園，17:00 返天神加滿油，18:00 還車後終極採購。",
         cover: "assets/guide/guide-27.png",
         stops: [
-          { time: "07:00", name: "元祖博多明太重", note: "早餐候選，步行約 4 分鐘，招牌明太子飯便當。", query: "元祖博多めんたい重" },
-          { time: "09:00", name: "海洋世界海之中道", note: "必看海豚/海獅表演、外洋大水槽表演、GOGO Seal。", query: "Marine World Uminonakamichi" },
-          { time: "午後", name: "海之中道海濱公園", note: "可買 Flower Train 1 日通行證，3 歲以上 500 日圓無限次搭乘。", query: "Uminonakamichi Seaside Park" },
+          { time: "07:00", name: "元祖博多明太重", note: "早餐候選，步行約 4 分鐘，招牌明太子飯便當。", query: "元祖博多めんたい重", mapCode: "13 318 503*84", mapCodeLabel: "元祖博多めんたい重" },
+          { time: "09:00", name: "海洋世界海之中道", note: "必看海豚/海獅表演、外洋大水槽表演、GOGO Seal。", query: "Marine World Uminonakamichi", mapCode: "13 553 836*75", mapCodeLabel: "マリンワールド海の中道" },
+          { time: "午後", name: "海之中道海濱公園", note: "可買 Flower Train 1 日通行證，3 歲以上 500 日圓無限次搭乘。", query: "Uminonakamichi Seaside Park", mapCode: "13 552 595*20", mapCodeLabel: "海の中道海浜公園" },
           { time: "17:00", name: "返天神並加滿油", note: "還車前務必加滿油，確認 ETC 費用。", query: "Times 天神大名店" },
           { time: "18:00", name: "Times 天神大名店還車", note: "結清 ETC，步行約 6 分鐘回飯店。", query: "Times 天神大名店" }
         ]
@@ -782,8 +809,8 @@
         summary: "07:00 飯店樓下早餐，09:15 計程車往福岡機場；先海關查驗退稅，再辦 BR105 託運返台。",
         cover: "assets/guide/guide-03.png",
         stops: [
-          { time: "07:00", name: "Starbucks Solaria Stage 店", note: "飯店樓下 1F，出發前輕鬆早餐。", query: "Starbucks Solaria Stage" },
-          { time: "09:15", name: "計程車前往福岡機場", note: "車程約 20 分鐘，預估 2,500-2,700 日圓。", query: "福岡機場 國際線" },
+          { time: "07:00", name: "Starbucks Solaria Stage 店", note: "飯店樓下 1F，出發前輕鬆早餐。", query: "Starbucks Solaria Stage", mapCode: "13 318 364*77", mapCodeLabel: "Starbucks 天神ソラリアステージ店" },
+          { time: "09:15", name: "計程車前往福岡機場", note: "車程約 20 分鐘，預估 2,500-2,700 日圓。", query: "福岡機場 國際線", mapCode: "13 354 096*47", mapCodeLabel: "福岡空港国際線ターミナル" },
           { time: "抵達後", name: "退稅海關查驗", note: "託運前先到 3 樓 Customs，帶免稅品、收據、護照查驗。", query: "福岡機場 税関" },
           { time: "安檢後", name: "Tax Refund Desk", note: "進管制區後到中央登機區旁退稅櫃檯領回退稅現金。", query: "Fukuoka Airport Tax Refund Desk" },
           { time: "12:15", name: "長榮 BR105 返台", note: "預計 13:45 抵達台灣。", query: "福岡機場 BR105" }
@@ -873,6 +900,18 @@
       return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
     }
 
+    function mapCodeMarkup(stop) {
+      if (!stop.mapCode) return "";
+      const label = stop.mapCodeLabel ? `<span>${stop.mapCodeLabel}</span>` : "";
+      return `
+        <div class="map-code">
+          <span>MAP CODE</span>
+          <strong>${stop.mapCode}</strong>
+          ${label}
+          <button class="copy-code" type="button" data-copy-code="${stop.mapCode}">複製</button>
+        </div>`;
+    }
+
     function renderNext() {
       const day = days[0];
       const stop = day.stops[1];
@@ -882,6 +921,7 @@
         <div>
           <h3>${stop.name}</h3>
           <p class="small">${stop.note}</p>
+          ${mapCodeMarkup(stop)}
           <div class="actions">
             <a class="primary-btn" href="${mapUrl(stop.query)}" target="_blank" rel="noreferrer">開地圖</a>
             <button class="quiet-btn" type="button" data-open-source="guide" data-open-index="3">機場攻略</button>
@@ -931,6 +971,7 @@
             <div>
               <h3>${stop.name}</h3>
               <p class="small">${stop.note}</p>
+              ${mapCodeMarkup(stop)}
             </div>
             ${stop.query ? `<a class="primary-btn" href="${mapUrl(stop.query)}" target="_blank" rel="noreferrer">地圖</a>` : ""}
           </article>`).join("")}`;
@@ -1110,6 +1151,26 @@
       const open = event.target.closest("[data-open-source]");
       if (open) openPdfPage(open.dataset.openSource, Number(open.dataset.openIndex));
 
+      const copyCode = event.target.closest("[data-copy-code]");
+      if (copyCode) {
+        const code = copyCode.dataset.copyCode;
+        const done = () => {
+          copyCode.textContent = "已複製";
+          setTimeout(() => { copyCode.textContent = "複製"; }, 1200);
+        };
+        if (navigator.clipboard?.writeText) {
+          navigator.clipboard.writeText(code).then(done).catch(() => {});
+        } else {
+          const textarea = document.createElement("textarea");
+          textarea.value = code;
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand("copy");
+          textarea.remove();
+          done();
+        }
+      }
+
       const del = event.target.closest("[data-delete-expense]");
       if (del) {
         state.expenses.splice(Number(del.dataset.deleteExpense), 1);
@@ -1162,7 +1223,7 @@
 
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
-        navigator.serviceWorker.register("service-worker.js?v=20260706-kyushu-install-v1", { updateViaCache: "none" }).catch(() => {});
+        navigator.serviceWorker.register("service-worker.js?v=20260706-mapcode-v1", { updateViaCache: "none" }).catch(() => {});
       });
     }
   </script>
