@@ -67,10 +67,11 @@
       color: white;
       background:
         linear-gradient(180deg, rgba(5, 23, 37, .10), rgba(5, 23, 37, .76)),
-        url("assets/hero-fukuoka.jpg") center center / cover;
+        url("assets/hero-solaria.jpg") center center / cover;
       border-radius: var(--radius);
       overflow: hidden;
       box-shadow: var(--shadow);
+      position: relative;
     }
     .hero h1 {
       margin: 0;
@@ -83,6 +84,14 @@
       margin: 16px 0 0;
       font-size: 1.02rem;
       color: rgba(255,255,255,.92);
+    }
+    .photo-credit {
+      position: absolute;
+      right: 12px;
+      bottom: 10px;
+      color: rgba(255,255,255,.70);
+      font-size: .68rem;
+      text-decoration: none;
     }
 
     .stats, .grid, .guide-grid, .tool-grid {
@@ -330,6 +339,7 @@
           <h1>九州0727親子旅遊</h1>
           <p>依 0727 版資料整理：六天五夜行程、租車與退稅提醒、MAP CODE 導航、購物餐廳清單、記帳匯率與 62 頁原始 PDF。</p>
         </div>
+        <a class="photo-credit" href="https://commons.wikimedia.org/wiki/File:Solariaplaza_afterrenewal-front.jpg" target="_blank" rel="noreferrer">CC BY-SA 4.0</a>
       </header>
       <div class="stats">
         <div class="stat"><strong>6 天 5 夜</strong><span>福岡、太宰府、由布院、別府、門司港、海之中道</span></div>
@@ -775,7 +785,7 @@
 
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
-        navigator.serviceWorker.register("service-worker.js?v=20260713-0727-v1", { updateViaCache: "none" }).catch(() => {});
+        navigator.serviceWorker.register("service-worker.js?v=20260713-0727-v2", { updateViaCache: "none" }).catch(() => {});
       });
     }
   </script>

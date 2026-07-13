@@ -1,4 +1,4 @@
-const CACHE_NAME = "kyushu-0727-app-shell-v1";
+const CACHE_NAME = "kyushu-0727-app-shell-v2";
 const APP_SHELL = [
   "./",
   "index.html",
@@ -7,7 +7,7 @@ const APP_SHELL = [
   "assets/icons/icon-512.png",
   "assets/icons/icon-maskable-512.png",
   "assets/icons/apple-touch-icon.png",
-  "assets/hero-fukuoka.jpg",
+  "assets/hero-solaria.jpg",
   "assets/pdf/page-01.jpg",
   "assets/pdf/page-02.jpg"
 ];
