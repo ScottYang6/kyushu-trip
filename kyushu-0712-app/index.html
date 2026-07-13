@@ -142,6 +142,12 @@
       gap: 8px;
       align-items: center;
     }
+    .tool-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
     .primary-btn, .quiet-btn, .danger-btn, .icon-btn, .copy-code, .tab, .pill {
       border: 0;
       min-height: 38px;
@@ -526,7 +532,14 @@
     ];
 
     const tools = [
-      { title: "MAP CODE 查詢", body: "Google Doc 提供 japanmapcode.com/ja 與 mapcode.app；App 內主要停車點可直接複製。" },
+      {
+        title: "MAP CODE 查詢",
+        body: "Google Doc 提供 japanmapcode.com/ja 與 mapcode.app；App 內主要停車點可直接複製。",
+        links: [
+          { label: "Japan MapCode", href: "https://japanmapcode.com/ja" },
+          { label: "MapCode App", href: "https://mapcode.app" }
+        ]
+      },
       { title: "租車還車", body: "還車前務必加滿油、保留加油收據、結清 ETC、檢查車內兒童用品與購物袋。" },
       { title: "機場退稅", body: "Day 6 先 Customs 查驗再托運；免稅品、明細、護照放隨身好拿。" },
       { title: "兒童用品", body: "麵包超人館同棟 B2F 西松屋、Lalaport 阿卡將本舖、岩田屋 MIKI HOUSE 都已列入。" }
@@ -615,6 +628,7 @@
         <article class="tool-card">
           <h3>${item.title}</h3>
           <p class="small">${item.body}</p>
+          ${item.links ? `<div class="tool-links">${item.links.map(link => `<a class="quiet-btn" href="${link.href}" target="_blank" rel="noreferrer">${link.label}</a>`).join("")}</div>` : ""}
         </article>`).join("");
     }
     function renderWallet() {
@@ -775,7 +789,7 @@
 
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
-        navigator.serviceWorker.register("service-worker.js?v=20260713-0727-v4", { updateViaCache: "none" }).catch(() => {});
+        navigator.serviceWorker.register("service-worker.js?v=20260713-0727-v5", { updateViaCache: "none" }).catch(() => {});
       });
     }
   </script>
