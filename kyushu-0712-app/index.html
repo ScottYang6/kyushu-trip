@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>九州0712親子旅遊</title>
+  <meta name="application-name" content="九州0712親子旅遊" />
+  <meta name="description" content="2026 日本九州親子旅遊 0712 版：行程、MAP CODE、記帳、退稅與 PDF 原頁。" />
+  <meta name="theme-color" content="#0b84bd" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="九州0712" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="manifest" href="manifest.webmanifest?v=20260713-0712-v1" />
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=20260713-0712-v1" />
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #607086;
+      --paper: #f7fbfb;
+      --wash: #eef7f4;
+      --card: #ffffff;
+      --blue: #0b84bd;
+      --blue-dark: #07577c;
+      --coral: #e85d45;
+      --mint: #5bb9a8;
+      --gold: #d99a28;
+      --line: rgba(23, 32, 51, .12);
+      --shadow: 0 12px 30px rgba(18, 54, 73, .10);
+      --radius: 8px;
+      font-family: "Microsoft JhengHei", "Noto Sans TC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      letter-spacing: 0;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background:
+        linear-gradient(150deg, rgba(11,132,189,.13), transparent 32%),
+        linear-gradient(330deg, rgba(232,93,69,.12), transparent 34%),
+        var(--paper);
+    }
+    a { color: inherit; }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+
+    .app {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 18px 18px calc(96px + env(safe-area-inset-bottom));
+    }
+
+    .hero {
+      min-height: 68vh;
+      display: grid;
+      align-items: end;
+      padding: 22px;
+      color: white;
+      background:
+        linear-gradient(180deg, rgba(5, 23, 37, .16), rgba(5, 23, 37, .78)),
+        url("assets/pdf/page-07.jpg") center 22% / cover;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(2.1rem, 7vw, 4.8rem);
+      line-height: .98;
+      letter-spacing: 0;
+    }
+    .hero p {
+      max-width: 760px;
+      margin: 16px 0 0;
+      font-size: 1.02rem;
+      color: rgba(255,255,255,.92);
+    }
+
+    .stats, .grid, .guide-grid, .tool-grid {
+      display: grid;
+      gap: 12px;
+    }
+    .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 14px 0 22px; }
+    .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .guide-grid, .tool-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .panel, .card, .day-card, .guide-card, .tool-card, .expense-row {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .panel { padding: 16px; }
+    .card, .day-card, .guide-card, .tool-card { padding: 14px; }
+    .stat {
+      min-height: 86px;
+      padding: 14px;
+      background: white;
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--coral);
+      border-radius: var(--radius);
+    }
+    .stat strong { display: block; font-size: 1.35rem; }
+    .stat span, .small { color: var(--muted); font-size: .9rem; line-height: 1.65; }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(11,132,189,.10);
+      color: var(--blue-dark);
+      font-size: .78rem;
+      font-weight: 800;
+    }
+    h2, h3 { letter-spacing: 0; }
+    h2 { margin: 0; font-size: 1.45rem; }
+    h3 { margin: 8px 0 6px; font-size: 1.05rem; }
+
+    .page { display: none; }
+    .page.active { display: block; }
+    .section { margin-top: 22px; }
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .actions, .pill-row, .tab-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .primary-btn, .quiet-btn, .danger-btn, .icon-btn, .copy-code, .tab, .pill {
+      border: 0;
+      min-height: 38px;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-weight: 800;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .primary-btn { background: var(--blue); color: white; }
+    .quiet-btn, .tab, .pill, .copy-code { background: rgba(11,132,189,.10); color: var(--blue-dark); }
+    .danger-btn { background: rgba(232,93,69,.13); color: #b53825; }
+    .tab.active, .pill.active { background: var(--blue); color: white; }
+
+    .timeline { display: grid; gap: 12px; }
+    .stop {
+      display: grid;
+      grid-template-columns: 78px 1fr auto;
+      gap: 12px;
+      align-items: start;
+      padding: 14px;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+    .time {
+      color: var(--blue);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .map-code {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      color: var(--ink);
+      font-size: .82rem;
+      font-weight: 800;
+    }
+    .map-code span { color: var(--muted); font-weight: 700; }
+    .copy-code {
+      min-height: 30px;
+      padding: 5px 9px;
+      border: 1px solid rgba(23,32,51,.14);
+      background: rgba(255,255,255,.72);
+    }
+
+    .wallet {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    form { display: grid; gap: 10px; }
+    label { display: grid; gap: 5px; color: var(--muted); font-size: .85rem; font-weight: 800; }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 11px 12px;
+      color: var(--ink);
+      background: white;
+    }
+    textarea { min-height: 180px; resize: vertical; }
+    .expense-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      margin-top: 8px;
+    }
+    .pdf-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .pdf-card {
+      padding: 8px;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .pdf-card img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 8.5 / 12;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: #edf2f4;
+    }
+    .pdf-card button {
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      z-index: 10;
+      left: 50%;
+      bottom: calc(10px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      width: min(720px, calc(100vw - 18px));
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+      padding: 8px;
+      background: rgba(255,255,255,.92);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 16px 40px rgba(18,54,73,.18);
+      backdrop-filter: blur(16px);
+    }
+    .nav-btn {
+      border: 0;
+      min-height: 54px;
+      padding: 7px 4px;
+      border-radius: 14px;
+      background: transparent;
+      color: var(--muted);
+      display: grid;
+      place-items: center;
+      gap: 2px;
+      font-size: .75rem;
+      font-weight: 900;
+    }
+    .nav-btn strong { font-size: 1.1rem; line-height: 1; }
+    .nav-btn.active { background: var(--blue); color: white; }
+
+    dialog {
+      width: min(1000px, calc(100vw - 20px));
+      border: 0;
+      padding: 0;
+      border-radius: var(--radius);
+      box-shadow: 0 20px 70px rgba(0,0,0,.35);
+    }
+    dialog::backdrop { background: rgba(5,18,29,.62); }
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      background: white;
+    }
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      background: rgba(23,32,51,.08);
+      color: var(--ink);
+      font-size: 1.3rem;
+    }
+    .modal-img {
+      display: block;
+      width: 100%;
+      max-height: 82vh;
+      object-fit: contain;
+      background: #eef2f4;
+    }
+
+    @media (max-width: 820px) {
+      .app { padding: 10px 10px calc(94px + env(safe-area-inset-bottom)); }
+      .hero { min-height: 62vh; padding: 18px; }
+      .stats, .grid, .guide-grid, .tool-grid, .wallet, .pdf-grid { grid-template-columns: 1fr; }
+      .stop { grid-template-columns: 62px 1fr; }
+      .stop .primary-btn { grid-column: 1 / -1; }
+      .bottom-nav { width: calc(100vw - 10px); gap: 3px; padding: 6px; }
+      .nav-btn { font-size: .68rem; min-height: 52px; }
+      .section-title { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="page active" id="home">
+      <header class="hero">
+        <div>
+          <span class="tag">2026/07/27 - 08/01 0712 版</span>
+          <h1>九州0712親子旅遊</h1>
+          <p>依 0712 PDF 與 Google Doc 整理：六天五夜行程、租車與退稅提醒、MAP CODE 導航、購物餐廳清單、記帳匯率與 62 頁原始 PDF。</p>
+        </div>
+      </header>
+      <div class="stats">
+        <div class="stat"><strong>6 天 5 夜</strong><span>福岡、太宰府、由布院、別府、門司港、海之中道</span></div>
+        <div class="stat"><strong>4 大 2 小</strong><span>3 歲與 2 歲，行程以推車與親子動線優先</span></div>
+        <div class="stat"><strong>ORIX</strong><span>07/28 08:30 取車，07/31 18:00 還車，W7796309</span></div>
+        <div class="stat"><strong>62 頁</strong><span>保留 0712 PDF 原頁，可直接放大查看</span></div>
+      </div>
+      <section class="section">
+        <div class="section-title"><h2>今日重點</h2><span class="tag">App 獨立新版</span></div>
+        <div class="grid" id="dayGrid"></div>
+      </section>
+      <section class="section">
+        <div class="section-title"><h2>行前提醒</h2><span class="tag">0712 Doc</span></div>
+        <div class="guide-grid" id="quickGrid"></div>
+      </section>
+    </section>
+
+    <section class="page" id="itinerary">
+      <div class="section-title">
+        <h2>每日行程</h2>
+        <div class="tab-row" id="dayTabs"></div>
+      </div>
+      <div class="timeline" id="timeline"></div>
+    </section>
+
+    <section class="page" id="guide">
+      <div class="section-title">
+        <h2>攻略重點</h2>
+        <div class="pill-row" id="guideFilters"></div>
+      </div>
+      <div class="guide-grid" id="guideGrid"></div>
+    </section>
+
+    <section class="page" id="tools">
+      <div class="section-title"><h2>工具與記帳</h2><span class="tag" id="rateBadge">匯率讀取中</span></div>
+      <div class="wallet">
+        <div class="panel">
+          <h3>旅行記帳</h3>
+          <p class="small" id="rateText">自動抓取 JPY → TWD 最新匯率，無網路時使用快取或備援匯率。</p>
+          <form id="expenseForm">
+            <label>品項<input id="expenseName" required placeholder="例如：Outlet 童鞋" /></label>
+            <label>日圓金額<input id="expenseAmount" type="number" min="0" step="1" required placeholder="12000" /></label>
+            <label>分類<select id="expenseCategory"><option>購物</option><option>餐飲</option><option>交通</option><option>門票</option><option>其他</option></select></label>
+            <button class="primary-btn" type="submit">新增支出</button>
+          </form>
+        </div>
+        <div class="panel">
+          <h3>小計</h3>
+          <div class="stats" style="grid-template-columns:1fr 1fr;margin:10px 0">
+            <div class="stat"><strong id="yenTotal">¥0</strong><span>日圓</span></div>
+            <div class="stat"><strong id="twdTotal">NT$0</strong><span>台幣估算</span></div>
+          </div>
+          <div class="actions"><button class="danger-btn" id="clearExpenses" type="button">清空</button></div>
+          <div id="expenseList"></div>
+        </div>
+      </div>
+      <div class="tool-grid section" id="toolGrid"></div>
+    </section>
+
+    <section class="page" id="notes">
+      <div class="section-title"><h2>備註與清單</h2><span class="tag">手機本機保存</span></div>
+      <div class="wallet">
+        <div class="panel">
+          <h3>臨時備註</h3>
+          <textarea id="noteText" placeholder="記下臨時買物、排隊狀況、孩子用品..."></textarea>
+          <div class="actions" style="margin-top:10px"><button class="primary-btn" id="saveNote" type="button">儲存備註</button></div>
+        </div>
+        <div class="panel">
+          <h3>檢查清單</h3>
+          <div id="checklist"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="pdf">
+      <div class="section-title"><h2>0712 PDF 原頁</h2><span class="tag">62 頁</span></div>
+      <div class="pdf-grid" id="pdfGrid"></div>
+    </section>
+
+    <nav class="bottom-nav" aria-label="主選單">
+      <button class="nav-btn active" data-page="home" type="button"><strong>⌂</strong><span>主頁</span></button>
+      <button class="nav-btn" data-page="itinerary" type="button"><strong>◎</strong><span>行程</span></button>
+      <button class="nav-btn" data-page="guide" type="button"><strong>▦</strong><span>攻略</span></button>
+      <button class="nav-btn" data-page="tools" type="button"><strong>¥</strong><span>工具</span></button>
+      <button class="nav-btn" data-page="notes" type="button"><strong>✓</strong><span>備註</span></button>
+      <button class="nav-btn" data-page="pdf" type="button"><strong>▣</strong><span>PDF</span></button>
+    </nav>
+  </div>
+
+  <dialog id="pageDialog">
+    <div class="modal-head">
+      <h3 id="modalTitle">PDF 頁面</h3>
+      <button class="icon-btn" id="closeDialog" type="button" aria-label="關閉">×</button>
+    </div>
+    <img class="modal-img" id="modalImage" src="assets/pdf/page-01.jpg" alt="PDF 頁面" />
+  </dialog>
+
+  <script>
+    const days = [
+      {
+        id: 1, date: "07/27", title: "台灣出發、福岡機場、麵包超人館、天神商圈", stay: "福岡索拉利亞西鐵酒店",
+        summary: "04:00/04:15 台中出發，BR106 抵福岡，計程車進天神，下午麵包超人館，17:30 華味鳥。",
+        stops: [
+          { time: "04:00", name: "台中雙定點出發", note: "旅順路二段 284 號與南興一路 5 號，福斯九人座，安全座椅 2 張。", query: "桃園國際機場 第二航廈" },
+          { time: "08:00", name: "長榮 BR106", note: "08:00 起飛，11:20 抵達福岡機場。抵達後 1 樓大門 3 號月台搭計程車。", query: "福岡機場 國際線" },
+          { time: "中午", name: "福岡索拉利亞西鐵酒店", note: "天神 2 丁目 1-1；飯店與 Solaria Plaza/地下街共構。", query: "Solaria Nishitetsu Hotel Fukuoka", mapCode: "13 318 244*23" },
+          { time: "午後", name: "福岡麵包超人兒童博物館", note: "Hakata Riverain Mall 5F；建議停留 2-3 小時，B2F 西松屋可順路採買。", query: "Fukuoka Anpanman Children's Museum", mapCode: "13 348 029*03" },
+          { time: "17:30", name: "博多華味鳥中洲本店", note: "從麵包超人館步行約 250 公尺，水炊鍋訂位晚餐。", query: "博多華味鳥 中洲本店" },
+          { time: "晚間", name: "天神地下街與 Solaria", note: "RINGO、BAKE、PRESS BUTTER SAND、三麗鷗、Reganet 超市等。", query: "天神地下街" }
+        ]
+      },
+      {
+        id: 2, date: "07/28", title: "ORIX 取車、太宰府、由布院溫泉", stay: "湯布院樂湧",
+        summary: "08:30 ORIX 天神大名店取車，太宰府散策，下午由布院湯之坪與金鱗湖，入住樂湧。",
+        stops: [
+          { time: "07:00", name: "Doutor 天神地下街早餐", note: "從 Solaria 走地下街可達，熱壓三明治套餐約 450-550 日圓。", query: "ドトールコーヒーショップ 天神駅店" },
+          { time: "08:30", name: "ORIX 租車 天神大名店", note: "預約號 W7796309；SA 級禁菸小轎車，ETC 車載器與 ETC 卡。TEL 092-717-8020。", query: "ORIX レンタカー 天神大名店" },
+          { time: "09:40", name: "太宰府駐車センター", note: "計次 500 日圓，車位多且有洗手間；停好後走表參道與天滿宮。", query: "太宰府駐車センター", mapCode: "55 333 862*01" },
+          { time: "上午", name: "太宰府天滿宮與表參道", note: "御神牛、臨時本殿、梅枝餅、明太法國麵包、角落生物與米飛兔小店。", query: "太宰府天滿宮" },
+          { time: "途中", name: "山田服務區下行", note: "大分自動車道休息點，建議停 30 分鐘上洗手間與補貨。", query: "山田サービスエリア 下り", mapCode: "166 735 654*63" },
+          { time: "午後", name: "由布院散策", note: "花卉村、金鱗湖、九州汽車歷史博物館、史努比茶屋；多數店家約 17:30 關門。", query: "由布院 金鱗湖", mapCode: "269 359 557*56" },
+          { time: "停車", name: "ゆふいん駐車場", note: "平日單日 300 日圓，假日 500 日圓，無人管理需準備零錢。", query: "ゆふいん駐車場", mapCode: "269 358 646*45" },
+          { time: "17:40", name: "湯布院樂湧", note: "一泊二食溫泉旅館，享用懷石料理晚餐。", query: "湯布院 樂涌", mapCode: "269 389 676*23" }
+        ]
+      },
+      {
+        id: 3, date: "07/29", title: "九州自然動物園、Lalaport、博多運河城", stay: "福岡索拉利亞西鐵酒店",
+        summary: "08:30 退房往九州自然動物園，午餐候選別府/日田，下午 Lalaport 福岡，晚間回福岡。",
+        stops: [
+          { time: "08:30", name: "樂湧退房出發", note: "早餐後開車前往九州自然動物園，建議開園前後抵達。", query: "湯布院 樂涌" },
+          { time: "09:30", name: "九州自然動物園 African Safari", note: "Safari Zone 可自駕或 Jungle Bus，Fureai Zone 可餵食互動。", query: "九州自然動物園", mapCode: "46 634 658*87" },
+          { time: "午餐", name: "地獄蒸工房鐵輪", note: "別府天然溫泉蒸氣 DIY，適合親子體驗。", query: "地獄蒸工房鐵輪", mapCode: "46 522 403*20" },
+          { time: "午餐備案", name: "豐後牛牛排館そむり", note: "別府老字號黑毛和牛排館，手作漢堡排適合小孩。", query: "豐後牛 そむり", mapCode: "46 375 864*37" },
+          { time: "途中", name: "山田服務區上行", note: "回福岡方向休息點。", query: "山田サービスエリア 上り", mapCode: "166 735 414*37" },
+          { time: "午後", name: "LaLaport 福岡", note: "巨大鋼彈、Oval Park、Moff animal cafe、阿卡將本舖、LoFt、DAISO。", query: "LaLaport 福岡", mapCode: "13 233 333*37" },
+          { time: "晚間", name: "福岡索拉利亞西鐵酒店", note: "回天神住宿，停車與飯店共構。", query: "Solaria Nishitetsu Hotel Fukuoka", mapCode: "13 318 244*23" }
+        ]
+      },
+      {
+        id: 4, date: "07/30", title: "門司港浪漫懷舊、北九州 Outlet、博多運河城", stay: "福岡索拉利亞西鐵酒店",
+        summary: "門司港懷舊區與九州鐵道紀念館，午餐燒咖哩，下午 The Outlets Kitakyushu，晚間運河城。",
+        stops: [
+          { time: "07:00", name: "Komeda's Coffee 福岡天神南店", note: "名古屋式早餐，親子友善沙發位。", query: "Komeda's Coffee 福岡天神南店" },
+          { time: "10:00", name: "九州鐵道紀念館西停車場", note: "停車後步行：鐵道紀念館、門司港車站、舊門司三井俱樂部、舊大阪商船、藍翼橋。", query: "九州鉄道記念館西駐車場", mapCode: "16 685 678*12" },
+          { time: "上午", name: "九州鐵道紀念館", note: "迷你鐵道火車，成人 500 日圓、國中以下 250 日圓、3 歲以下免費。", query: "九州鐵道紀念館" },
+          { time: "午餐", name: "門司港燒咖哩", note: "Princess Phi Phi、伽哩本舖、MILKHALL MOJIKO 門司港布丁。", query: "伽哩本舖 門司港レトロ店" },
+          { time: "14:30", name: "The Outlets Kitakyushu", note: "免費 4,500 台車位，服務中心可拿外國旅客優惠券。", query: "The Outlets Kitakyushu", mapCode: "16 427 380*03" },
+          { time: "停車", name: "Outlet 西-1 駐車場", note: "官方建議停車區，適合直接進商場。", query: "THE OUTLETS KITAKYUSHU 駐車場 西1", mapCode: "16 427 344*85" },
+          { time: "晚間", name: "博多運河城", note: "18:00 起水舞秀，19:00/21:00 鋼彈水舞秀；退稅方式依店鋪分兩種。", query: "Canal City Hakata", mapCode: "13 319 317*43" }
+        ]
+      },
+      {
+        id: 5, date: "07/31", title: "海之中道、水族館、還車、天神採購", stay: "福岡索拉利亞西鐵酒店",
+        summary: "PRONTO 早餐，海之中道海濱公園與海洋世界，17:00 回天神加油，18:00 ORIX 還車。",
+        stops: [
+          { time: "07:00", name: "PRONTO 福岡天神木村家ビル店", note: "西式早餐套餐約 500-650 日圓，離飯店步行約 3-4 分鐘。", query: "PRONTO Fukuokatenjin Kimuraya Bldg", mapCode: "13 318 547*86" },
+          { time: "09:00", name: "海之中道車站口/奇妙世界口停車", note: "停車後 2-3 分鐘入園，與水族館起終點相近，免走回頭路。", query: "海の中道駅口駐車場" },
+          { time: "上午", name: "海之中道海濱公園", note: "Flower Train 一日券 3 歲以上 500 日圓，可在花之丘、動物森林、兒童廣場間移動。", query: "Uminonakamichi Seaside Park" },
+          { time: "午餐", name: "海洋世界 Reilly 餐廳", note: "1F 餐廳，可看海豚；另有 2F M-cafe 與公園餐廳。", query: "Marine World Uminonakamichi Restaurant Reilly" },
+          { time: "午後", name: "海洋世界海之中道", note: "九州最大水族館，海豚/海獅表演、外洋大水槽、GOGO Seal。", query: "Marine World Uminonakamichi" },
+          { time: "18:00", name: "ORIX 租車 天神大名店還車", note: "還車前加滿油，結清 ETC。TEL 092-717-8020。", query: "ORIX レンタカー 天神大名店", mapCode: "13 317 377*54" },
+          { time: "晚間", name: "天神中心商圈", note: "PARCO、Mina 天神、岩田屋、唐吉訶德、ShinShin、樂天地牛腸鍋。", query: "天神 福岡" }
+        ]
+      },
+      {
+        id: 6, date: "08/01", title: "福岡機場、退稅、BR105 返台", stay: "台中 Home",
+        summary: "09:15 飯店搭計程車直達福岡機場，托運前海關查驗，出境後 Tax Refund Desk 領退稅。",
+        stops: [
+          { time: "07:30", name: "APETITO Cafe 早餐", note: "天神地下街早餐候選，出發前整理行李與購物品。", query: "APETITO Cafe 天神地下街" },
+          { time: "09:15", name: "計程車前往福岡機場國際線", note: "車程約 20 分鐘，預估 2,500-2,700 日圓。", query: "福岡機場 國際線" },
+          { time: "抵達後", name: "托運前海關查驗", note: "3 樓出境大廳 Customs，帶免稅商品、收據、護照先查驗再托運。", query: "福岡機場 税関" },
+          { time: "出境後", name: "Tax Refund Desk", note: "中央登機區旁，憑海關蓋章收據與護照領取日圓現金或退回帳戶。", query: "Fukuoka Airport Tax Refund Desk" },
+          { time: "12:15", name: "長榮 BR105 返台", note: "12:15 起飛，13:45 抵達桃園。", query: "福岡機場 BR105" }
+        ]
+      }
+    ];
+
+    const quickItems = [
+      { title: "2026 退稅新制", category: "退稅", body: "託運前先帶免稅品、購買明細與護照到 3 樓 Customs 查驗；出境後到 Tax Refund Desk 領回退稅。" },
+      { title: "租車 W7796309", category: "租車", body: "ORIX 天神大名店，07/28 08:30 取車、07/31 18:00 還車；TEL 092-717-8020。" },
+      { title: "兒童動線", category: "親子", body: "太宰府走橋右側平坦小徑；海之中道用 Flower Train；門司港由鐵道紀念館西停車場步行環線。" }
+    ];
+
+    const guideItems = [
+      { title: "免稅與退稅", category: "退稅", bullets: ["2026/11/1 新制重點已列入備忘", "機場託運前先 Customs 查驗", "運河城、Lalaport、Outlet 退稅方式不同"] },
+      { title: "太宰府停車與推車", category: "交通", bullets: ["太宰府駐車センター Map Code 55 333 862*01", "太鼓橋有階梯，推車走右側平坦小徑", "表參道午餐與伴手禮集中"] },
+      { title: "由布院停車與散策", category: "景點", bullets: ["ゆふいん駐車場 Map Code 269 358 646*45", "金鱗湖、花卉村、汽車博物館、Snoopy 茶屋", "店家多約 17:30 關門"] },
+      { title: "九州自然動物園", category: "親子", bullets: ["African Safari Map Code 46 634 658*87", "可自駕 Safari 或搭 Jungle Bus", "Fureai Zone 可餵食互動"] },
+      { title: "Lalaport 福岡", category: "購物", bullets: ["Map Code 13 233 333*37", "巨大鋼彈、Moff animal cafe、阿卡將本舖", "PIE VAT 或服務中心退稅"] },
+      { title: "門司港一日線", category: "景點", bullets: ["九州鐵道紀念館西停車場 Map Code 16 685 678*12", "鐵道紀念館、門司港站、舊建築、藍翼橋", "午餐燒咖哩與門司港布丁"] },
+      { title: "The Outlets Kitakyushu", category: "購物", bullets: ["商場 Map Code 16 427 380*03", "西-1 駐車場 Map Code 16 427 344*85", "服務中心可拿外國旅客優惠券"] },
+      { title: "海之中道", category: "親子", bullets: ["海濱公園與水族館相鄰停車", "Flower Train 一日券 3 歲以上 500 日圓", "水族館 Reilly 餐廳可看海豚"] },
+      { title: "天神採購", category: "購物", bullets: ["PARCO、Mina、岩田屋、Solaria、唐吉訶德", "茅乃舍、MIKI HOUSE、LoFt、UNIQLO/GU", "ShinShin、樂天地、天婦羅ひらお備案"] }
+    ];
+
+    const tools = [
+      { title: "MAP CODE 查詢", body: "Google Doc 提供 japanmapcode.com/ja 與 mapcode.app；App 內主要停車點可直接複製。" },
+      { title: "租車還車", body: "還車前務必加滿油、保留加油收據、結清 ETC、檢查車內兒童用品與購物袋。" },
+      { title: "機場退稅", body: "Day 6 先 Customs 查驗再托運；免稅品、明細、護照放隨身好拿。" },
+      { title: "兒童用品", body: "麵包超人館同棟 B2F 西松屋、Lalaport 阿卡將本舖、岩田屋 MIKI HOUSE 都已列入。" }
+    ];
+
+    const checklist = {
+      "證件與交通": ["護照", "駕照日文譯本", "租車預約 W7796309", "ETC/加油收據", "航班 BR106/BR105"],
+      "兒童用品": ["推車", "兒童水壺", "濕紙巾", "替換衣物", "退燒藥與常備藥"],
+      "退稅": ["免稅品集中", "購買明細", "護照", "機場 3F Customs", "出境後 Tax Refund Desk"]
+    };
+
+    const state = {
+      activeDay: 1,
+      guideFilter: "全部",
+      exchangeRate: Number(localStorage.getItem("kyushu0712-rate")) || 0.22,
+      rateTime: localStorage.getItem("kyushu0712-rate-time") || "",
+      expenses: JSON.parse(localStorage.getItem("kyushu0712-expenses") || "[]"),
+      checks: JSON.parse(localStorage.getItem("kyushu0712-checks") || "{}")
+    };
+
+    const yen = new Intl.NumberFormat("ja-JP", { style: "currency", currency: "JPY", maximumFractionDigits: 0 });
+    const twd = new Intl.NumberFormat("zh-TW", { style: "currency", currency: "TWD", maximumFractionDigits: 0 });
+    const rateFormatter = new Intl.NumberFormat("zh-TW", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+
+    function mapUrl(query) {
+      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+    }
+    function mapCodeMarkup(stop) {
+      if (!stop.mapCode) return "";
+      return `<div class="map-code"><span>MAP CODE</span><strong>${stop.mapCode}</strong><button class="copy-code" type="button" data-copy-code="${stop.mapCode}">複製</button></div>`;
+    }
+    function renderHome() {
+      document.getElementById("dayGrid").innerHTML = days.map(day => `
+        <article class="day-card">
+          <span class="tag">Day ${day.id} ${day.date}</span>
+          <h3>${day.title}</h3>
+          <p class="small">${day.summary}</p>
+          <div class="small">住宿：${day.stay}</div>
+        </article>`).join("");
+      document.getElementById("quickGrid").innerHTML = quickItems.map(item => `
+        <article class="guide-card">
+          <span class="tag">${item.category}</span>
+          <h3>${item.title}</h3>
+          <p class="small">${item.body}</p>
+        </article>`).join("");
+    }
+    function renderDayTabs() {
+      document.getElementById("dayTabs").innerHTML = days.map(day => `
+        <button class="tab ${state.activeDay === day.id ? "active" : ""}" data-day="${day.id}" type="button">Day ${day.id}</button>`).join("");
+    }
+    function renderTimeline() {
+      const day = days.find(item => item.id === state.activeDay);
+      document.getElementById("timeline").innerHTML = `
+        <div class="panel">
+          <div class="section-title">
+            <h2>Day ${day.id} - ${day.date} ${day.title}</h2>
+            <span class="tag">${day.stay}</span>
+          </div>
+          <p class="small">${day.summary}</p>
+        </div>
+        ${day.stops.map(stop => `
+          <article class="stop">
+            <div class="time">${stop.time}</div>
+            <div>
+              <h3>${stop.name}</h3>
+              <p class="small">${stop.note}</p>
+              ${mapCodeMarkup(stop)}
+            </div>
+            ${stop.query ? `<a class="primary-btn" href="${mapUrl(stop.query)}" target="_blank" rel="noreferrer">地圖</a>` : ""}
+          </article>`).join("")}`;
+    }
+    function renderGuides() {
+      const categories = ["全部", ...Array.from(new Set(guideItems.map(item => item.category)))];
+      document.getElementById("guideFilters").innerHTML = categories.map(cat => `
+        <button class="pill ${state.guideFilter === cat ? "active" : ""}" data-filter="${cat}" type="button">${cat}</button>`).join("");
+      const items = state.guideFilter === "全部" ? guideItems : guideItems.filter(item => item.category === state.guideFilter);
+      document.getElementById("guideGrid").innerHTML = items.map(item => `
+        <article class="guide-card">
+          <span class="tag">${item.category}</span>
+          <h3>${item.title}</h3>
+          <ul>${item.bullets.map(bullet => `<li>${bullet}</li>`).join("")}</ul>
+        </article>`).join("");
+    }
+    function renderTools() {
+      document.getElementById("toolGrid").innerHTML = tools.map(item => `
+        <article class="tool-card">
+          <h3>${item.title}</h3>
+          <p class="small">${item.body}</p>
+        </article>`).join("");
+    }
+    function renderWallet() {
+      localStorage.setItem("kyushu0712-expenses", JSON.stringify(state.expenses));
+      const total = state.expenses.reduce((sum, item) => sum + item.amount, 0);
+      document.getElementById("yenTotal").textContent = yen.format(total);
+      document.getElementById("twdTotal").textContent = twd.format(total * state.exchangeRate);
+      document.getElementById("expenseList").innerHTML = state.expenses.length ? state.expenses.map((item, index) => `
+        <div class="expense-row">
+          <div><strong>${item.name}</strong><div class="small">${item.category}</div></div>
+          <strong>${yen.format(item.amount)}</strong>
+          <button class="danger-btn" data-delete-expense="${index}" type="button">刪除</button>
+        </div>`).join("") : `<p class="small">尚未新增支出。</p>`;
+    }
+    function updateRateText() {
+      document.getElementById("rateBadge").textContent = `JPY→TWD ${rateFormatter.format(state.exchangeRate)}`;
+      const when = state.rateTime ? new Date(state.rateTime).toLocaleString("zh-TW", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "備援";
+      document.getElementById("rateText").textContent = `目前使用匯率 ${rateFormatter.format(state.exchangeRate)}，更新時間：${when}。`;
+      renderWallet();
+    }
+    async function fetchExchangeRate() {
+      updateRateText();
+      try {
+        const res = await fetch("https://open.er-api.com/v6/latest/JPY", { cache: "no-store" });
+        if (!res.ok) throw new Error("rate");
+        const data = await res.json();
+        if (data?.rates?.TWD) {
+          state.exchangeRate = Number(data.rates.TWD);
+          state.rateTime = data.time_last_update_unix ? new Date(data.time_last_update_unix * 1000).toISOString() : new Date().toISOString();
+          localStorage.setItem("kyushu0712-rate", String(state.exchangeRate));
+          localStorage.setItem("kyushu0712-rate-time", state.rateTime);
+          updateRateText();
+        }
+      } catch (error) {
+        updateRateText();
+      }
+    }
+    function renderChecklist() {
+      document.getElementById("checklist").innerHTML = Object.entries(checklist).map(([group, items]) => `
+        <div class="panel" style="box-shadow:none;margin-bottom:10px">
+          <h3>${group}</h3>
+          ${items.map(item => {
+            const id = `${group}-${item}`;
+            return `<label style="display:flex;align-items:center;gap:9px;color:var(--ink);font-weight:700"><input data-check="${id}" type="checkbox" ${state.checks[id] ? "checked" : ""} style="width:auto">${item}</label>`;
+          }).join("")}
+        </div>`).join("");
+    }
+    function pdfTitle(index) {
+      const titles = {
+        1: "退稅及機場資訊", 2: "行程總覽與航班", 3: "租車合約與 MAP CODE 查詢", 6: "Day 1 封面",
+        7: "Day 1 福岡機場交通", 20: "Day 2 太宰府與由布院", 31: "Day 3 自然動物園與 Lalaport",
+        39: "Day 4 門司港與 Outlet", 54: "Day 5 海之中道", 61: "Day 6 返程"
+      };
+      return titles[index] || `PDF 第 ${index} 頁`;
+    }
+    function renderPdfGrid() {
+      document.getElementById("pdfGrid").innerHTML = Array.from({ length: 62 }, (_, i) => {
+        const page = i + 1;
+        const src = `assets/pdf/page-${String(page).padStart(2, "0")}.jpg`;
+        return `<article class="pdf-card">
+          <img src="${src}" alt="${pdfTitle(page)}" loading="lazy">
+          <button class="quiet-btn" type="button" data-open-pdf="${page}">${pdfTitle(page)}</button>
+        </article>`;
+      }).join("");
+    }
+    function openPdf(page) {
+      const src = `assets/pdf/page-${String(page).padStart(2, "0")}.jpg`;
+      document.getElementById("modalTitle").textContent = `${pdfTitle(page)} - 第 ${page} 頁`;
+      const img = document.getElementById("modalImage");
+      img.src = src;
+      img.alt = document.getElementById("modalTitle").textContent;
+      document.getElementById("pageDialog").showModal();
+    }
+    function switchPage(id) {
+      document.querySelectorAll(".page").forEach(page => page.classList.toggle("active", page.id === id));
+      document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.toggle("active", btn.dataset.page === id));
+      if (id === "home") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }));
+      }
+    }
+
+    document.querySelectorAll(".nav-btn").forEach(btn => {
+      btn.addEventListener("pointerup", event => {
+        event.preventDefault();
+        switchPage(btn.dataset.page);
+      });
+      btn.addEventListener("click", event => {
+        event.preventDefault();
+        switchPage(btn.dataset.page);
+      });
+    });
+    document.addEventListener("click", event => {
+      const day = event.target.closest("[data-day]");
+      if (day) {
+        state.activeDay = Number(day.dataset.day);
+        renderDayTabs();
+        renderTimeline();
+      }
+      const filter = event.target.closest("[data-filter]");
+      if (filter) {
+        state.guideFilter = filter.dataset.filter;
+        renderGuides();
+      }
+      const copyCode = event.target.closest("[data-copy-code]");
+      if (copyCode) {
+        const code = copyCode.dataset.copyCode;
+        const done = () => {
+          copyCode.textContent = "已複製";
+          setTimeout(() => { copyCode.textContent = "複製"; }, 1200);
+        };
+        if (navigator.clipboard?.writeText) navigator.clipboard.writeText(code).then(done).catch(() => {});
+        else done();
+      }
+      const openPdfBtn = event.target.closest("[data-open-pdf]");
+      if (openPdfBtn) openPdf(Number(openPdfBtn.dataset.openPdf));
+      const del = event.target.closest("[data-delete-expense]");
+      if (del) {
+        state.expenses.splice(Number(del.dataset.deleteExpense), 1);
+        renderWallet();
+      }
+    });
+    document.getElementById("expenseForm").addEventListener("submit", event => {
+      event.preventDefault();
+      state.expenses.unshift({
+        name: document.getElementById("expenseName").value.trim(),
+        amount: Number(document.getElementById("expenseAmount").value),
+        category: document.getElementById("expenseCategory").value
+      });
+      event.target.reset();
+      renderWallet();
+    });
+    document.getElementById("clearExpenses").addEventListener("click", () => {
+      state.expenses = [];
+      renderWallet();
+    });
+    document.getElementById("saveNote").addEventListener("click", () => {
+      localStorage.setItem("kyushu0712-note", document.getElementById("noteText").value);
+    });
+    document.getElementById("checklist").addEventListener("change", event => {
+      if (event.target.matches("[data-check]")) {
+        state.checks[event.target.dataset.check] = event.target.checked;
+        localStorage.setItem("kyushu0712-checks", JSON.stringify(state.checks));
+      }
+    });
+    document.getElementById("closeDialog").addEventListener("click", () => document.getElementById("pageDialog").close());
+
+    document.getElementById("noteText").value = localStorage.getItem("kyushu0712-note") || "";
+    renderHome();
+    renderDayTabs();
+    renderTimeline();
+    renderGuides();
+    renderTools();
+    renderChecklist();
+    renderPdfGrid();
+    fetchExchangeRate();
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("service-worker.js?v=20260713-0712-v1", { updateViaCache: "none" }).catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
